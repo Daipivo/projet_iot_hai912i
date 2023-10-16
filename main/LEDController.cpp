@@ -7,7 +7,6 @@ void LEDController::init() {
     server.on("/test", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", "Coucou");});
 
-
     server.on("/led/on", HTTP_GET, [this](AsyncWebServerRequest *request){
     digitalWrite(_ledPin, HIGH);
     request->send(200, "text/plain", "LED allumée");});
