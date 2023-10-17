@@ -10,7 +10,7 @@ AsyncWebServer server(80);
 
 const int ledPin = 17;
 
-const char* ssid = "ESP32-Network";
+const char* ssid = "ESP32-Yoann";
 const char* password = "Esp32-Password";
 
 WiFiController wifiController(ssid, password);
