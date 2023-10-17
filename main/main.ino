@@ -19,6 +19,8 @@ LEDController ledController;
 void setup() {
     
     Serial.begin(115200);  // Initialiser le port série pour le débogage
+
+    pinMode(ledPin, OUTPUT);
     
     delay(1000); 
     
@@ -29,6 +31,7 @@ void setup() {
     Serial.println("Wifi connecté");
 
     ledController.init();
+    ledController.setLedPin(ledPin);
 
     Serial.println("LEDController initialisé");
 
@@ -39,5 +42,4 @@ void setup() {
 
 void loop() {
   ledController.handle();
-
 }
