@@ -3,17 +3,19 @@
 #include <TFT_eSPI.h>
 #include "WifiController.h"
 #include "LEDController.h"
+#include "TEMPERATUREController.h"
 
 TFT_eSPI tft = TFT_eSPI();
 
-AsyncWebServer server(80);
-
 const int ledPin = 17;
+const int temperaturePin = 12; 
 
 const char* ssid = "ESP32-Yoann";
 const char* password = "Esp32-Password";
 
+AsyncWebServer server(80);
 WiFiController wifiController(ssid, password);
+//TEMPERATUREController temperatureController(temperaturePin, server);
 LEDController ledController;
 
 void setup() {
@@ -32,8 +34,11 @@ void setup() {
 
     ledController.init();
     ledController.setLedPin(ledPin);
-
     Serial.println("LEDController initialisé");
+
+    //temperatureController.init();
+    Serial.println("TEMPERATUREController initialisé");
+
 
     server.begin();
 
@@ -42,4 +47,5 @@ void setup() {
 
 void loop() {
   ledController.handle();
+  //temperatureController.handle();
 }
