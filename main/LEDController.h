@@ -5,13 +5,12 @@
 
 class LEDController {
 public:
-    LEDController();
+    LEDController(int analogPin, AsyncWebServer *server);
     void init();  // Cette méthode initialise le serveur web
     void handle();  // Cette méthode gère les requêtes entrantes, si nécessaire
-    void setLedPin(int ledPin);
 private:
-    AsyncWebServer server;
-    int _ledPin;
+    AsyncWebServer *_server;
+    int _analogPin;
 };
 
 #endif

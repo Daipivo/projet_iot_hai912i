@@ -1,28 +1,18 @@
 #include "LEDController.h"
 
-LEDController::LEDController() : server(80) {}
+LEDController::LEDController(int analogPin, AsyncWebServer *server) 
+    : _analogPin(analogPin), _server(server) {}
 
 void LEDController::init() {
 
-    server.on("/test", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "Coucou");});
-
-    server.on("/led/on", HTTP_GET, [this](AsyncWebServerRequest *request){
-    digitalWrite(_ledPin, HIGH);
+    _server->on("/led/on", HTTP_GET, [this](AsyncWebServerRequest *request){
+    digitalWrite(_analogPin, HIGH);
     request->send(200, "text/plain", "LED allumée");});
 
-    server.on("/led/off", HTTP_GET, [this](AsyncWebServerRequest *request){
-    digitalWrite(_ledPin, LOW);
+    _server->on("/led/off", HTTP_GET, [this](AsyncWebServerRequest *request){
+    digitalWrite(_analogPin, LOW);
     request->send(200, "text/plain", "LED éteinte");});
 
-
-    // Ajoutez d'autres routes si nécessaire
-
-    server.begin();  // Démarre le serveur web
-}
-
-void LEDController::setLedPin(int ledPin) {
-    _ledPin = ledPin;
 }
 
 void LEDController::handle() {
