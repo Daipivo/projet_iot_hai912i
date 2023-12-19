@@ -2,9 +2,11 @@
 #include <ESPAsyncWebServer.h>
 #include <TFT_eSPI.h>
 #include "WifiController.h"
-#include "TEMPERATUREController.h"
-#include "LUMIEREController.h"
-#include "LEDController.h"
+#include "TemperatureController.h"
+#include "LumiereController.h"
+#include "LedController.h"
+#include "DisplayManager.h"
+
 
 // Définissez le SSID et le mot de passe de votre point d'accès
 const char* ssid = "ESP32-AccessPoint";
@@ -18,9 +20,10 @@ const int transistorLedPin = 17;
 
 AsyncWebServer server(80);
 WiFiController wifiController(ssid, password);
-LEDController ledController(transistorLedPin, &server);
-TEMPERATUREController temperatureController(temperaturePin, &server);
-LUMIEREController lumiereController(lumierePin, &server);
+LedController ledController(transistorLedPin, server);
+TemperatureController temperatureController(temperaturePin, server);
+LumiereController lumiereController(lumierePin, server);
+DisplayManager displayManager(tft);
 
 void setup() {
   Serial.begin(115200);
@@ -35,30 +38,16 @@ void setup() {
   temperatureController.init();
   lumiereController.init();
   ledController.init();
+  displayManager.init();
 
-  tft.init();
-  tft.setRotation(0);
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextSize(1.5);
-  updateDisplay();
-
-}
-
-void updateDisplay() {
-  // Obtenir les données de température et de luminosité
-  float temperature = temperatureController.getTemperature();
-  float luminosite = lumiereController.getLuminosity();
-
-  // Effacer l'écran et afficher les nouvelles valeurs
-  tft.fillScreen(TFT_BLACK);
-  tft.setCursor(0, 0);
-  tft.printf("Temp: %.2f C\n", temperature);
-  tft.setCursor(0, 30);
-  tft.printf("Lum: %.2f V", luminosite);
 }
 
 void loop() {
-  updateDisplay(); // Mettre à jour l'affichage
+
+  float temperature = temperatureController.getTemperature();
+  float luminosite = lumiereController.getLuminosity();
+  
+  displayManager.updateDisplay(temperature, luminosite);
+
   delay(1000);
 }

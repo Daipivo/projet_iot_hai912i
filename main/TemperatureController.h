@@ -4,16 +4,16 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h> 
 
-class TEMPERATUREController {
+class TemperatureController {
 public:
-    TEMPERATUREController(int analogPin, AsyncWebServer* server);
+    TemperatureController(int analogPin, AsyncWebServer& server);
     void handle();
     void init();
     float getTemperature();
     
 private:
     int _analogPin;
-    AsyncWebServer* _server;
+    AsyncWebServer& _server;
     static const float R1;
     static const float T0; 
     static const float R0;
