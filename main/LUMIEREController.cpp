@@ -18,5 +18,11 @@ void LUMIEREController::init() {
 }
 
 void LUMIEREController::handle() {
-    // Si votre serveur web nécessite une gestion périodique, faites-le ici
+  float luminosite = getLuminosity();
+  Serial.print("Luminosité actuelle: ");
+  Serial.print(luminosite);
+  Serial.println(" V");
+
+  // Ajouter un délai pour ne pas saturer le moniteur série
+  delay(1000); // Attendre une seconde
 }

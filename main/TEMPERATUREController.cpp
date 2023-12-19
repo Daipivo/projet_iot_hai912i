@@ -4,7 +4,6 @@ const float TEMPERATUREController::R1 = 10000.0; // résistance fixe
 const float TEMPERATUREController::T0 = 25.0 + 273.15; // Température de référence en Kelvin
 const float TEMPERATUREController::R0 = 10000.0; // Résistance du thermistor à T0
 const float TEMPERATUREController::B = 3950.0; // Coefficient B
-// Il semble que TEMPERATUREController::T1 n'a pas été défini.
 
 TEMPERATUREController::TEMPERATUREController(int analogPin, AsyncWebServer* server) 
     : _analogPin(analogPin), _server(server) {}

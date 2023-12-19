@@ -2,58 +2,63 @@
 #include <ESPAsyncWebServer.h>
 #include <TFT_eSPI.h>
 #include "WifiController.h"
-#include "LEDController.h"
 #include "TEMPERATUREController.h"
-#include "LUMIEREController.h" 
+#include "LUMIEREController.h"
+#include "LEDController.h"
+
+// Définissez le SSID et le mot de passe de votre point d'accès
+const char* ssid = "ESP32-AccessPoint";
+const char* password = "123456789";
 
 TFT_eSPI tft = TFT_eSPI();
 
-const int ledPin = 17;
 const int temperaturePin = 32;
-const int lumierePin = 33; 
-
-const char* ssid = "ESP32-Yoann";
-const char* password = "Esp32-Password";
+const int lumierePin = 33;
+const int transistorLedPin = 17;
 
 AsyncWebServer server(80);
 WiFiController wifiController(ssid, password);
+LEDController ledController(transistorLedPin, &server);
 TEMPERATUREController temperatureController(temperaturePin, &server);
-LEDController ledController(ledPin, &server);
 LUMIEREController lumiereController(lumierePin, &server);
 
 void setup() {
-    
-    Serial.begin(115200);  // Initialiser le port série pour le débogage
+  Serial.begin(115200);
 
-    server.begin();
+  // Configurer l'ESP32 en mode point d'accès
+  wifiController.connect();
 
-    pinMode(ledPin, OUTPUT);
-    
-    delay(1000); 
-    
-    Serial.println("Début du setup");
-    
-    wifiController.connect();
+  Serial.println("Démarrage du serveur sur le port 80");
+  server.begin();
+  Serial.println("Serveur démarré avec succès");
 
-    Serial.println("Wifi connecté");
+  temperatureController.init();
+  lumiereController.init();
+  ledController.init();
 
-    ledController.init();
-    Serial.println("Controlleur de led initialisé !");
+  tft.init();
+  tft.setRotation(0);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(1.5);
+  updateDisplay();
 
-    temperatureController.init();
-    Serial.println(temperatureController.getCurrentTemperature());
-    Serial.println("Controlleur de température initialisé !");
+}
 
-    lumiereController.init();
-    Serial.println("Controlleur de lumière initialisé !");
+void updateDisplay() {
+  // Obtenir les données de température et de luminosité
+  float temperature = temperatureController.getTemperature();
+  float luminosite = lumiereController.getLuminosity();
 
-    Serial.println("Serveur démarré");
+  // Effacer l'écran et afficher les nouvelles valeurs
+  tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0, 0);
+  tft.printf("Temp: %.2f C\n", temperature);
+  tft.setCursor(0, 30);
+  tft.printf("Lum: %.2f V", luminosite);
 }
 
 void loop() {
-
-  ledController.handle();
-  temperatureController.handle();
-  lumiereController.handle();
-
+  updateDisplay(); // Mettre à jour l'affichage
+  delay(1000);
 }
