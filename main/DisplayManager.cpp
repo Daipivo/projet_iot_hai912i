@@ -1,4 +1,5 @@
 #include "DisplayManager.h"
+#include <TFT_eSPI.h>
 
 DisplayManager::DisplayManager(TFT_eSPI &tftDisplay) : tft(tftDisplay) {}
 

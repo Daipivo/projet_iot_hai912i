@@ -1,5 +1,6 @@
 #ifndef DISPLAYMANAGER_H
 #define DISPLAYMANAGER_H
+#include <TFT_eSPI.h>
 
 class DisplayManager {
 public:

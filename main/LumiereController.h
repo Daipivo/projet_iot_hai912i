@@ -7,7 +7,7 @@
 
 class LumiereController {
 public:
-    LumiereController(int analogPin, AsyncWebServer& server);
+    LumiereController(int analogPin, AsyncWebServer* server);
     
     float getLuminosity();
     void init();
@@ -15,7 +15,7 @@ public:
 
 private:
     int _analogPin;
-    AsyncWebServer& _server;
+    AsyncWebServer* _server;
 };
 
 #endif // LUMIERECONTROLLER_H
