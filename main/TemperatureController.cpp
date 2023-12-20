@@ -5,7 +5,7 @@ const float TemperatureController::T0 = 25.0 + 273.15; // Température de réfé
 const float TemperatureController::R0 = 10000.0; // Résistance du thermistor à T0
 const float TemperatureController::B = 3950.0; // Coefficient B
 
-TemperatureController::TemperatureController(int analogPin, AsyncWebServer& server) 
+TemperatureController::TemperatureController(int analogPin, AsyncWebServer* server) 
     : _analogPin(analogPin), _server(server) {}
 
 float TemperatureController::getTemperature() {
@@ -21,7 +21,7 @@ float TemperatureController::getTemperature() {
 }
 
 void TemperatureController::init() {
-    _server->on("/temperature", HTTP_GET, [this](AsyncWebServerRequest& request){
+    _server->on("/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
         float temperature = this->getTemperature();
         String response = String(temperature) + "°C";
         request->send(200, "text/plain", response);

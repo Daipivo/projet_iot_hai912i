@@ -1,6 +1,6 @@
 #include "LumiereController.h"
 
-LumiereController::LumiereController(int analogPin, AsyncWebServer& server) 
+LumiereController::LumiereController(int analogPin, AsyncWebServer* server) 
     : _analogPin(analogPin), _server(server) {}
 
 float LumiereController::getLuminosity() {
@@ -9,20 +9,19 @@ float LumiereController::getLuminosity() {
 }
 
 void LumiereController::init() {
-    _server->on("/luminosite", HTTP_GET, [this](AsyncWebServerRequest& request){
+    _server->on("/luminosite", HTTP_GET, [this](AsyncWebServerRequest* request){
         float luminosite = this->getLuminosity();
         String response = String(luminosite) + "V";
         request->send(200, "text/plain", response);
     });
-
 }
 
 void LumiereController::handle() {
-  float luminosite = getLuminosity();
-  Serial.print("Luminosité actuelle: ");
-  Serial.print(luminosite);
-  Serial.println(" V");
+    float luminosite = getLuminosity();
+    Serial.print("Luminosité actuelle: ");
+    Serial.print(luminosite);
+    Serial.println(" V");
 
-  // Ajouter un délai pour ne pas saturer le moniteur série
-  delay(1000); // Attendre une seconde
+    // Ajouter un délai pour ne pas saturer le moniteur série
+    delay(1000); // Attendre une seconde
 }
