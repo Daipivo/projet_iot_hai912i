@@ -5,20 +5,46 @@ LedController::LedController(int analogPin, AsyncWebServer* server)
 
 void LedController::init() {
 
-    pinMode(_analogPin, OUTPUT); 
-        
+    pinMode(_analogPin, OUTPUT);
+
     _server->on("/led/on", HTTP_GET, [this](AsyncWebServerRequest* request){
-        digitalWrite(_analogPin, HIGH);
+        _controlManuelActif = true;
+        _derniereActionManuelle = millis();
+        turnOnLed();
         request->send(200, "text/plain; charset=utf-8", "LED allumée");
     });
 
     _server->on("/led/off", HTTP_GET, [this](AsyncWebServerRequest* request){
-        digitalWrite(_analogPin, LOW);
+        _controlManuelActif = true;
+        _derniereActionManuelle = millis();
+        turnOffLed();
         request->send(200, "text/plain; charset=utf-8", "LED éteinte");
     });
-
+    
 }
 
+void LedController::turnOnLed() {
+    digitalWrite(_analogPin, HIGH);
+}
+
+void LedController::turnOffLed() {
+    digitalWrite(_analogPin, LOW);
+}
+
+void LedController::onEvenement(const String& typeEvenement, bool estEnDessousSeuil) {
+    if (!_controlManuelActif) {
+      if (typeEvenement == "luminosite") {
+          estEnDessousSeuil ? turnOnLed() : turnOffLed();
+      }
+      else{
+          estEnDessousSeuil ? turnOffLed() : turnOnLed();
+      }
+    }
+}
+
+
 void LedController::handle() {
-    // Si votre serveur web nécessite une gestion périodique, faites-le ici
+    if (_controlManuelActif && (millis() - _derniereActionManuelle > _delaiControlManuel)) {
+        _controlManuelActif = false;  // Réinitialiser le contrôle manuel après le délai
+    }
 }

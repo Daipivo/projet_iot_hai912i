@@ -4,16 +4,23 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include "GestionnaireEvenements.h"
+
+
 
 class TemperatureController {
 public:
-    TemperatureController(int analogPin, AsyncWebServer* server);
+
+    TemperatureController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements);
     
     float getTemperature();
     void init();
     void handle();
 
 private:
+    GestionnaireEvenements* _gestionnaireEvenements;
+    bool _temperatureControlEnabled = false;
+    float _temperatureThreshold = 0.0;
     int _analogPin;
     AsyncWebServer* _server;
     static const float R1;

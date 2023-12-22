@@ -4,16 +4,20 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include "GestionnaireEvenements.h"
 
 class LumiereController {
 public:
-    LumiereController(int analogPin, AsyncWebServer* server);
+    LumiereController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements);
     
     float getLuminosity();
     void init();
     void handle();
 
 private:
+    GestionnaireEvenements* _gestionnaireEvenements;
+    bool _luminosityControlEnabled = false;
+    float _luminosityThreshold = 0.0;
     int _analogPin;
     AsyncWebServer* _server;
 };

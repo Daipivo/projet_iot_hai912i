@@ -19,11 +19,12 @@ const int lumierePin = 33;
 const int transistorLedPin = 17;
 
 AsyncWebServer server(80);
+GestionnaireEvenements gestionnaireEvenements;
 WiFiController wifiController(ssid, password);
 LedController ledController(transistorLedPin, &server);
-TemperatureController temperatureController(temperaturePin, &server);
-LumiereController lumiereController(lumierePin, &server);
-//DisplayManager displayManager(tft);
+TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
+LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
+DisplayManager displayManager(tft);
 
 void setup() {
   Serial.begin(115200);
@@ -35,10 +36,13 @@ void setup() {
   server.begin();
   Serial.println("Serveur démarré avec succès");
 
+  gestionnaireEvenements.enregistrerObservateur("luminosite", &ledController);
+  gestionnaireEvenements.enregistrerObservateur("temperature", &ledController);
+
+  ledController.init();
   temperatureController.init();
   lumiereController.init();
-  ledController.init();
-
+  
   tft.init();
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
@@ -50,22 +54,20 @@ void setup() {
   Serial.print(temperature);
   Serial.println(" °C");
   
-  //displayManager.init();
+  displayManager.init();
 
 }
 
 void loop() {
 
+  temperatureController.handle();
+  lumiereController.handle();
+  ledController.handle();
+
   float temperature = temperatureController.getTemperature();
   float luminosite = lumiereController.getLuminosity();
 
-  /*tft.fillScreen(TFT_BLACK);
-  tft.setCursor(0, 0);
-  tft.printf("Temp: %.2f C\n", temperature);
-  tft.setCursor(0, 30);
-  tft.printf("Lum: %.2f V", luminosite);
-  */
-  //displayManager.updateDisplay(temperature, luminosite);
+  displayManager.updateDisplay(temperature, luminosite);
 
   delay(1000);
 }
