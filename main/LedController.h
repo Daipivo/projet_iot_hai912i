@@ -12,12 +12,11 @@ public:
     void handle();
     void turnOnLed();
     void turnOffLed();
-    void onEvenement(const String& typeEvenement, bool estEnDessousSeuil) override;
+    void onSeuilLuminositeEvenement(bool estEnDessousSeuil);
+    void onSeuilTemperatureEvenement(bool estEnDessousSeuil);
+    void onEvenement(const String& typeEvenement, bool etat) override;
 
 private:
-    bool _controlManuelActif = false;
-    unsigned long _derniereActionManuelle = 0;
-    const unsigned long _delaiControlManuel = 10000; 
     AsyncWebServer* _server;
     int _analogPin;
 };

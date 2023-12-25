@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'settings_page.dart'; // Assurez-vous d'importer vos pages ici
 import 'visualization_page.dart';
-import 'bottom_navigation.dart';
+import '../components/bottom_navigation.dart';
 import 'statistics_page.dart';
 
 class MainPage extends StatefulWidget {
