@@ -1,9 +1,10 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import '../utils/network_utils.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
+import '../model/sensor.dart';
+import '../utils/network_utils.dart';
+import '../services/sensor_data.dart';
+import 'dart:developer';
 
 class VisualizationPage extends StatefulWidget {
   @override
@@ -13,23 +14,47 @@ class VisualizationPage extends StatefulWidget {
 class VisualizationPageState extends State<VisualizationPage>
     with WidgetsBindingObserver {
   String selectedRoom = 'Bureau 1';
+
   bool isLightOn = false;
+
+  bool isAutomatic = false;
 
   String temperature = '';
   String luminosity = '';
+
+  late Sensor temperatureSensor;
+  late Sensor luminositySensor;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(8.0);
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    var sensorService = SensorDataService();
+    sensorService.addListener(_updateSensorData);
     loadData();
+  }
+
+  void _updateSensorData() {
+    var sensorService = SensorDataService();
+    setState(() {
+      temperatureSensor = sensorService.temperatureSensor;
+      luminositySensor = sensorService.luminositySensor;
+      temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
+      luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
+      isAutomatic =
+          temperatureSensor.automatique || luminositySensor.automatique;
+
+      bool isTemperatureHigh =
+          temperatureSensor.valeur > temperatureSensor.seuil;
+      bool isLuminosityLow = luminositySensor.valeur < luminositySensor.seuil;
+      isLightOn = isTemperatureHigh || isLuminosityLow;
+    });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    SensorDataService().removeListener(_updateSensorData);
     super.dispose();
   }
 
@@ -48,10 +73,45 @@ class VisualizationPageState extends State<VisualizationPage>
     });
 
     try {
-      temperature = await Commons.fetchTemperature();
-      luminosity = await Commons.fetchLuminosity();
-    } catch (e) {}
+      var sensorService = SensorDataService();
 
+      String ledStatus = await fetchLedStatus();
+      isLightOn = ledStatus == "LED allumée";
+
+      Map<String, dynamic> dataTemperature = await fetchData("temperature");
+
+      double tempValeur =
+          double.parse(dataTemperature['temperature'].toString());
+      double tempSeuil = double.parse(dataTemperature['threshold'].toString());
+      bool tempAutomatique = dataTemperature['controlEnabled'] == true;
+
+      sensorService.updateTemperatureSensor(
+          tempValeur, tempSeuil, tempAutomatique);
+
+      Map<String, dynamic> dataLuminosity = await fetchData("luminosity");
+
+      double lumiValeur = double.parse(dataLuminosity['luminosity'].toString());
+      double lumiSeuil = double.parse(dataLuminosity['threshold'].toString());
+      bool lumiAutomatique = dataLuminosity['controlEnabled'] == true;
+
+      sensorService.updateLuminositySensor(
+          lumiValeur, lumiSeuil, lumiAutomatique);
+
+      // Utiliser les données mises à jour depuis le service singleton
+      setState(() {
+        temperatureSensor = sensorService.temperatureSensor;
+        luminositySensor = sensorService.luminositySensor;
+
+        temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
+        luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
+      });
+    } catch (e) {
+      setState(() {
+        temperature = "Non disponible";
+        luminosity = "Non disponible";
+        isLightOn = false;
+      });
+    }
     if (mounted) {
       setState(() {});
     }
@@ -170,6 +230,9 @@ class VisualizationPageState extends State<VisualizationPage>
         ? AppStrings.lightOnStatus
         : AppStrings.lightOffStatus; // Utiliser une condition ici
 
+    String autoModeText =
+        "Mode Automatique: " + (isAutomatic ? "Activé" : "Désactivé");
+
     return Card(
       color: AppColors.cardColor,
       shape: RoundedRectangleBorder(
@@ -191,6 +254,12 @@ class VisualizationPageState extends State<VisualizationPage>
                 ),
               ),
             ),
+            Text(
+              autoModeText,
+              style: const TextStyle(
+                fontSize: 14.0, // Vous pouvez ajuster la taille de police ici
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -204,11 +273,15 @@ class VisualizationPageState extends State<VisualizationPage>
                 ),
                 Switch(
                   value: isLightOn,
-                  onChanged: (bool newValue) {
-                    setState(() {
-                      isLightOn = newValue;
-                    });
-                  },
+                  onChanged: isAutomatic
+                      ? null
+                      : (bool newValue) {
+                          toggleLed(newValue, (bool newState) {
+                            setState(() {
+                              isLightOn = newState;
+                            });
+                          });
+                        },
                 ),
               ],
             ),

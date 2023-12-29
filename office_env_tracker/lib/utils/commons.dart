@@ -3,19 +3,17 @@ import 'app_theme.dart';
 import 'network_utils.dart';
 
 class Commons {
+  static Future<Map<String, dynamic>> fetchTemperature() async {
+    return fetchData('http://192.168.4.1/temperature');
+  }
 
+  static Future<Map<String, dynamic>> fetchLuminosity() async {
+    return fetchData('http://192.168.4.1/luminosite');
+  }
 
-static Future<String> fetchTemperature() async {
-    return fetchData('http://192.168.4.1/temperature', 'temperature');
-}
-
-static Future<String> fetchLuminosity() async {
-    return fetchData('http://192.168.4.1/luminosite', 'luminosite');
-}
-
-
-
-  static Widget buildButton(BuildContext context, String buttonName, IconData icon, Function() onSelected, String selectedButton, {double? width}) {
+  static Widget buildButton(BuildContext context, String buttonName,
+      IconData icon, Function() onSelected, String selectedButton,
+      {double? width}) {
     bool isSelected = selectedButton == buttonName;
 
     Widget buttonContent = Row(

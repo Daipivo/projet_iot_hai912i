@@ -33,18 +33,45 @@ void TemperatureController::init() {
         request->send(200, "text/plain", "Contrôle de température désactivé");
     });
 
-    _server->on("/temperature/seuil", HTTP_GET, [this](AsyncWebServerRequest* request){
-        if (request->hasParam("valeur")) {
-            _temperatureThreshold = request->getParam("valeur")->value().toFloat();
+    _server->on("/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    float temperature = this->getTemperature();
+    bool temperatureControlState = _temperatureControlEnabled;
+    float temperatureThreshold = _temperatureThreshold;
+
+    // Construction de l'objet JSON
+    DynamicJsonDocument doc(1024);
+    doc["temperature"] = temperature;
+    doc["controlEnabled"] = temperatureControlState;
+    doc["threshold"] = temperatureThreshold;
+
+    String response;
+    serializeJson(doc, response); // Convertit l'objet JSON en chaîne de caractères
+
+    serializeJsonPretty(doc, Serial);
+    request->send(200, "application/json", response);
+    
+    });
+
+   _server->on("/temperature/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
+    NULL,
+    [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+        DynamicJsonDocument doc(1024);
+        deserializeJson(doc, (const char*)data);
+        if (doc.containsKey("value")) {
+            float value = doc["value"]; 
+            _temperatureThreshold = value;
             request->send(200, "text/plain", "Seuil de température réglé");
         } else {
-            request->send(400, "text/plain", "Paramètre 'valeur' manquant");
+            request->send(400, "text/plain", "Paramètre 'value' manquant");
         }
-    });
+});
+
+
 
     _server->on("/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
         float temperature = this->getTemperature();
         String response = String(temperature) + "°C";
+
         request->send(200, "text/plain", response);
     });
 

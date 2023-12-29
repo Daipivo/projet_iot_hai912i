@@ -27,6 +27,7 @@ LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements
 DisplayManager displayManager(tft);
 
 void setup() {
+  
   Serial.begin(115200);
 
   // Configurer l'ESP32 en mode point d'accès

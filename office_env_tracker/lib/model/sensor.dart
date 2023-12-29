@@ -5,6 +5,7 @@ class Sensor {
   IconData icon;
   double valeur;
   double seuil;
+  String unit;
   bool automatique;
 
   Sensor({
@@ -12,6 +13,7 @@ class Sensor {
     required this.icon,
     required this.valeur,
     required this.seuil,
+    required this.unit,
     this.automatique = false,
   });
 }

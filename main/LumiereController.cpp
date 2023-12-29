@@ -10,30 +10,52 @@ float LumiereController::getLuminosity() {
 
 void LumiereController::init() {
     
-    _server->on("/luminosite/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/luminosity/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         _luminosityControlEnabled = true;
         request->send(200, "text/plain", "Contrôle de luminosité activé");
     });
 
-    _server->on("/luminosite/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/luminosity/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
         _luminosityControlEnabled = false;
         request->send(200, "text/plain", "Contrôle de luminosité désactivé");
     }); 
 
-    _server->on("/luminosite/seuil", HTTP_GET, [this](AsyncWebServerRequest* request){
-        if (request->hasParam("valeur")) {
-            _luminosityThreshold = request->getParam("valeur")->value().toFloat();
-            request->send(200, "text/plain", "Seuil de luminosité réglé");
-        } else {
-            request->send(400, "text/plain", "Paramètre 'valeur' manquant");
-        }
-    });
+    _server->on("/luminosity/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    float luminosite = this->getLuminosity();
+    bool luminosityControlState = _luminosityControlEnabled;
+    float luminosityThreshold = _luminosityThreshold;
 
-    _server->on("/luminosite", HTTP_GET, [this](AsyncWebServerRequest* request){
+    // Construction de l'objet JSON
+    DynamicJsonDocument doc(1024);
+    doc["luminosity"] = luminosite;
+    doc["controlEnabled"] = luminosityControlState;
+    doc["threshold"] = luminosityThreshold;
+
+    String response;
+    serializeJson(doc, response); // Convertit l'objet JSON en chaîne de caractères
+
+    request->send(200, "application/json", response);
+});
+
+    _server->on("/luminosity/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request){
+    if (request->hasParam("value")) {
+        _luminosityThreshold = request->getParam("value")->value().toFloat();
+        request->send(200, "text/plain", "Seuil de luminosité réglé");
+    } else {
+        request->send(400, "text/plain", "Paramètre 'valeur' manquant");
+    }
+});
+
+
+    _server->on("/luminosity", HTTP_GET, [this](AsyncWebServerRequest* request){
         float luminosite = this->getLuminosity();
         String response = String(luminosite) + "V";
         request->send(200, "text/plain", response);
     });
+
+   
+
+
 }
 
 void LumiereController::handle() {
