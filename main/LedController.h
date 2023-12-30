@@ -6,21 +6,25 @@
 
 class LedController : public IEvenementObservateur {
 public:
-    
-    LedController(int analogPin, AsyncWebServer* server);
+    LedController(int luminosityLedPin, int temperatureLedPin, AsyncWebServer* server);
     void init();  
     void handle();
-    void turnOnLed();
-    void turnOffLed();
-    bool isLedOn();
+    void turnOnLuminosityLed();
+    void turnOffLuminosityLed();
+    void turnOnTemperatureLed();
+    void turnOffTemperatureLed();
+    bool isLuminosityLedOn();
+    bool isTemperatureLedOn();
     void onSeuilLuminositeEvenement(bool estEnDessousSeuil);
     void onSeuilTemperatureEvenement(bool estEnDessousSeuil);
     void onEvenement(const String& typeEvenement, bool etat) override;
 
 private:
     AsyncWebServer* _server;
-    int _analogPin;
-    bool _isLedOn;
+    int _luminosityLedPin;
+    int _temperatureLedPin;
+    bool _isLuminosityLedOn;
+    bool _isTemperatureLedOn;
 };
 
 #endif // LedController_H

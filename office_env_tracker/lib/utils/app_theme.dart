@@ -20,6 +20,8 @@ class AppStrings {
   static const temperature = 'Température';
   static const luminosityTitleCard = 'Luminosité :';
   static const temperatureTitleCard = 'Température :';
+  static const luminosityUrl = 'luminosity';
+  static const temperatureUrl = 'temperature';
   static const loadingData = 'Chargement...';
   static const seuil = 'Seuil';
   static const activateLedSeuilTitle = "Activation de la lumière";

@@ -14,12 +14,13 @@ class VisualizationPage extends StatefulWidget {
 class VisualizationPageState extends State<VisualizationPage>
     with WidgetsBindingObserver {
   String selectedRoom = 'Bureau 1';
-  bool isLightOn = false;
   bool isAutomatic = false;
   String temperature = '';
   String luminosity = '';
   late Sensor temperatureSensor;
   late Sensor luminositySensor;
+  bool isTemperatureLedOn = false;
+  bool isLuminosityLedOn = false;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(8.0);
   late final SensorDataService
@@ -38,26 +39,12 @@ class VisualizationPageState extends State<VisualizationPage>
   void _updateSensorData() {
     setState(() {
       _setSensorData();
-      _calculateLightStatus();
     });
   }
 
   void _setSensorData() {
     temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
     luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
-    isAutomatic = temperatureSensor.automatique || luminositySensor.automatique;
-  }
-
-  void _calculateLightStatus() {
-    bool isTemperatureHigh = temperatureSensor.valeur > temperatureSensor.seuil;
-    bool isLuminosityLow = luminositySensor.valeur < luminositySensor.seuil;
-    bool shouldBeOn = (isTemperatureHigh || isLuminosityLow) && isAutomatic;
-
-    if (!isAutomatic) {
-      shouldBeOn = isLightOn;
-    }
-
-    isLightOn = shouldBeOn;
   }
 
   Future<void> loadData() async {
@@ -66,7 +53,6 @@ class VisualizationPageState extends State<VisualizationPage>
     try {
       await _fetchAndUpdateSensorData();
       _setSensorData();
-      _calculateLightStatus();
     } catch (e) {
       _setErrorState();
     }
@@ -84,15 +70,21 @@ class VisualizationPageState extends State<VisualizationPage>
   void _setErrorState() {
     temperature = "Non disponible";
     luminosity = "Non disponible";
-    isLightOn = false;
   }
 
   Future<void> _fetchAndUpdateSensorData() async {
-    String ledStatus = await fetchLedStatus();
-    isLightOn = ledStatus == "LED allumée";
+    String ledStatusTemperature =
+        await fetchLedStatus(AppStrings.temperatureUrl);
+    isTemperatureLedOn = ledStatusTemperature == "On";
+
+    String ledStatusLuminosity = await fetchLedStatus(AppStrings.luminosityUrl);
+    isLuminosityLedOn = ledStatusLuminosity == "On";
 
     var dataTemperature = await fetchData("temperature");
     var dataLuminosity = await fetchData("luminosity");
+
+    sensorService.updateTemperatureLed(isTemperatureLedOn);
+    sensorService.updateLuminosityLed(isLuminosityLedOn);
 
     sensorService.updateTemperatureSensor(
       double.parse(dataTemperature['temperature'].toString()),
@@ -137,13 +129,88 @@ class VisualizationPageState extends State<VisualizationPage>
             const SizedBox(height: 12.0),
             _buildHorizontalButtonRow(),
             const SizedBox(height: 32.0),
-            _buildCard(context, AppStrings.temperatureTitleCard, temperature,
-                Icons.thermostat_outlined),
-            const SizedBox(height: 18.0),
-            _buildCard(context, AppStrings.luminosityTitleCard, luminosity,
-                Icons.wb_sunny_outlined),
-            const SizedBox(height: 18.0),
-            _buildLightStatus(context),
+            _buildCardSensor(context, temperatureSensor),
+            _buildCardSensor(context, luminositySensor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardSensor(BuildContext context, Sensor sensor) {
+    String data = "${sensor.valeur.toStringAsFixed(1)} ${sensor.unit}";
+    String autoModeText =
+        "Mode Automatique : " + (sensor.automatique ? "Activé" : "Désactivé");
+    String lightStatusText =
+        sensor.isLedOn ? AppStrings.lightOnStatus : AppStrings.lightOffStatus;
+
+    return Card(
+      color: AppColors.cardColor,
+      margin: const EdgeInsets.all(10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    sensor.type,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Icon(sensor.icon, size: 32),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              data.isNotEmpty ? data : AppStrings.loadingData,
+              style: const TextStyle(
+                color: AppColors.cardData,
+                fontSize: 24,
+              ),
+            ),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 6.0)),
+            const Divider(),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 6.0)),
+            Text(
+              autoModeText,
+              style: const TextStyle(
+                fontSize: 14.0,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    lightStatusText,
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: sensor.isLedOn,
+                  onChanged: sensor.automatique
+                      ? null
+                      : (bool newValue) {
+                          toggleLed(newValue, sensor.type, (bool newState) {
+                            setState(() {
+                              sensor.isLedOn = newState;
+                            });
+                          });
+                        },
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -178,117 +245,5 @@ class VisualizationPageState extends State<VisualizationPage>
     setState(() {
       selectedRoom = roomName;
     });
-  }
-
-  Widget _buildCard(
-      BuildContext context, String title, String data, IconData icon) {
-    return Card(
-      color: AppColors.cardColor,
-      margin: const EdgeInsets.all(10),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0), // Padding externe de la Card
-        child: Column(
-          mainAxisSize: MainAxisSize.min, // S'adapte au contenu
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // Utilisation de Row pour aligner le titre et l'icône
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  // Expanded pour occuper tout l'espace horizontal disponible
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Icon(icon, size: 32), // Icône alignée à droite
-              ],
-            ),
-            SizedBox(
-                height:
-                    8), // Espace entre le titre / icône et le contenu suivant
-            // Contenu du texte
-            Text(
-              data.isNotEmpty ? data : AppStrings.loadingData,
-              style: const TextStyle(
-                color: AppColors.cardData,
-                fontSize: 24,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLightStatus(BuildContext context) {
-    String lightStatusText = isLightOn
-        ? AppStrings.lightOnStatus
-        : AppStrings.lightOffStatus; // Utiliser une condition ici
-
-    String autoModeText =
-        "Mode Automatique: " + (isAutomatic ? "Activé" : "Désactivé");
-
-    return Card(
-      color: AppColors.cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      margin: const EdgeInsets.all(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                AppStrings.stateLight,
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              autoModeText,
-              style: const TextStyle(
-                fontSize: 14.0, // Vous pouvez ajuster la taille de police ici
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    lightStatusText,
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: isLightOn,
-                  onChanged: isAutomatic
-                      ? null
-                      : (bool newValue) {
-                          toggleLed(newValue, (bool newState) {
-                            setState(() {
-                              isLightOn = newState;
-                            });
-                          });
-                        },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

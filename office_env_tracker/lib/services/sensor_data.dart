@@ -19,6 +19,7 @@ class SensorDataService extends ChangeNotifier {
     seuil: 0.00,
     unit: '°C',
     automatique: false,
+    isLedOn: false,
   );
 
   Sensor luminositySensor = Sensor(
@@ -28,14 +29,25 @@ class SensorDataService extends ChangeNotifier {
     seuil: 0.00,
     unit: ' V',
     automatique: false,
+    isLedOn: false,
   );
 
-  bool isLightOn = false;
+  void updateTemperatureLed(bool isOn) {
+    temperatureSensor.isLedOn = isOn;
+    notifyListeners();
+  }
+
+  void updateLuminosityLed(bool isOn) {
+    luminositySensor.isLedOn = isOn;
+    notifyListeners();
+  }
 
   void updateTemperatureSensor(double valeur, double seuil, bool automatique) {
     temperatureSensor.valeur = valeur;
     temperatureSensor.seuil = seuil;
     temperatureSensor.automatique = automatique;
+    temperatureSensor.isLedOn = (automatique && valeur > seuil) ||
+        (!automatique && temperatureSensor.isLedOn);
     notifyListeners();
   }
 
@@ -43,11 +55,8 @@ class SensorDataService extends ChangeNotifier {
     luminositySensor.valeur = valeur;
     luminositySensor.seuil = seuil;
     luminositySensor.automatique = automatique;
-    notifyListeners();
-  }
-
-  void updateLed(bool isOn) {
-    isLightOn = isOn;
+    luminositySensor.isLedOn = (automatique && valeur < seuil) ||
+        (!automatique && luminositySensor.isLedOn);
     notifyListeners();
   }
 }

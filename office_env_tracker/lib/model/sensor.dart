@@ -7,6 +7,7 @@ class Sensor {
   double seuil;
   String unit;
   bool automatique;
+  bool isLedOn;
 
   Sensor({
     required this.type,
@@ -15,5 +16,6 @@ class Sensor {
     required this.seuil,
     required this.unit,
     this.automatique = false,
+    this.isLedOn = false,
   });
 }

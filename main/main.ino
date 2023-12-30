@@ -14,14 +14,15 @@ const char* password = "123456789";
 
 TFT_eSPI tft = TFT_eSPI();
 
-const int temperaturePin = 32;
-const int lumierePin = 33;
-const int transistorLedPin = 17;
+const int temperaturePin = 33;
+const int lumierePin = 32;
+const int luminosityLedPin = 17;
+const int temperatureLedPin = 15;
 
 AsyncWebServer server(80);
 GestionnaireEvenements gestionnaireEvenements;
 WiFiController wifiController(ssid, password);
-LedController ledController(transistorLedPin, &server);
+LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
 LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
 DisplayManager displayManager(tft);
@@ -64,7 +65,6 @@ void loop() {
   temperatureController.handle();
   lumiereController.handle();
   ledController.handle();
-
   float temperature = temperatureController.getTemperature();
   float luminosite = lumiereController.getLuminosity();
 

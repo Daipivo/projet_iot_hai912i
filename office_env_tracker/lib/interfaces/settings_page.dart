@@ -51,11 +51,8 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   void _updateDisplayValues() {
-    log("Coucou");
-    log(seuilText);
     valueText = selectedSensor.valeur.toStringAsFixed(1);
     seuilText = selectedSensor.seuil.toStringAsFixed(1);
-    log(seuilText);
   }
 
   @override
@@ -358,6 +355,19 @@ class _SettingsPageState extends State<SettingsPage>
                           if (mounted) {
                             setState(() {
                               _updateDisplayValues();
+                              if (sensor.type == AppStrings.temperature) {
+                                sensorService.updateTemperatureSensor(
+                                  sensor.valeur,
+                                  sensor.seuil,
+                                  sensor.automatique,
+                                );
+                              } else if (sensor.type == AppStrings.luminosity) {
+                                sensorService.updateLuminositySensor(
+                                  sensor.valeur,
+                                  sensor.seuil,
+                                  sensor.automatique,
+                                );
+                              }
                             });
                           }
                         } else {

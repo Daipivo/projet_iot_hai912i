@@ -9,14 +9,14 @@ import 'package:office_env_tracker/utils/app_theme.dart';
 
 String urlBase = "http://192.168.4.1";
 
-Future<String> fetchLedStatus() async {
-  String url = "$urlBase/led/status";
-  log(url);
+Future<String> fetchLedStatus(String sensorType) async {
+  String url = "$urlBase/${sensorType}Led/status";
   try {
     final response =
         await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
       log(response.body.toString());
+      log("cocucicico");
       return response.body;
     } else {
       log('Réponse HTTP non réussie: ${response.statusCode}');
@@ -28,8 +28,14 @@ Future<String> fetchLedStatus() async {
   }
 }
 
-Future<void> toggleLed(bool isOn, Function(bool) onStateChanged) async {
-  String url = isOn ? "$urlBase/led/on" : "$urlBase/led/off";
+Future<void> toggleLed(
+    bool isOn, String sensorType, Function(bool) onStateChanged) async {
+  String sensorUrl = sensorType == AppStrings.temperature
+      ? AppStrings.temperatureUrl
+      : AppStrings.luminosityUrl;
+
+  String url =
+      isOn ? "$urlBase/${sensorUrl}Led/on" : "$urlBase/${sensorUrl}Led/off";
   log(url);
 
   try {
@@ -84,6 +90,8 @@ Future<bool> updateSensorThreshold(Sensor sensor, double newThreshold) async {
       sensor.type == AppStrings.temperature ? "temperature" : "luminosity";
 
   String url = "$urlBase/$sensorType/threshold";
+  log(url);
+
   try {
     final response = await http.put(
       Uri.parse(url),
