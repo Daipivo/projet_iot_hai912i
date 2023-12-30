@@ -2,7 +2,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
 
+import '../model/sensor.dart';
 import 'dart:async';
+
+import 'package:office_env_tracker/utils/app_theme.dart';
 
 String urlBase = "http://192.168.4.1";
 
@@ -11,8 +14,9 @@ Future<String> fetchLedStatus() async {
   log(url);
   try {
     final response =
-        await http.get(Uri.parse(url)).timeout(const Duration(seconds: 1));
+        await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
+      log(response.body.toString());
       return response.body;
     } else {
       log('Réponse HTTP non réussie: ${response.statusCode}');
@@ -49,7 +53,7 @@ Future<Map<String, dynamic>> fetchData(String type) async {
 
   try {
     final response =
-        await http.get(Uri.parse(url)).timeout(const Duration(seconds: 1));
+        await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
       var responseBody = json.decode(response.body);
       log(responseBody
@@ -65,14 +69,37 @@ Future<Map<String, dynamic>> fetchData(String type) async {
   }
 }
 
-Future<http.Response> manageControl(String url) async {
+Future<bool> manageControl(String url) async {
   try {
     final response = await http.get(Uri.parse(url));
-    // Vous pouvez effectuer des vérifications supplémentaires ici si nécessaire
-    return response;
+    return response.statusCode == 200;
   } catch (e) {
-    // Gérer les exceptions ici
-    // Vous pouvez renvoyer une réponse personnalisée ou lever à nouveau l'exception
-    throw e;
+    log("Erreur lors de l'exécution de manageControl: $e");
+    return false;
+  }
+}
+
+Future<bool> updateSensorThreshold(Sensor sensor, double newThreshold) async {
+  String sensorType =
+      sensor.type == AppStrings.temperature ? "temperature" : "luminosity";
+
+  String url = "$urlBase/$sensorType/threshold";
+  try {
+    final response = await http.put(
+      Uri.parse(url),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({'value': newThreshold.toString()}),
+    );
+
+    if (response.statusCode == 200) {
+      sensor.seuil = newThreshold;
+      return true;
+    } else {
+      log("Erreur: Code de statut ${response.statusCode}");
+      return false;
+    }
+  } catch (e) {
+    log("Exception lors de la mise à jour du seuil: $e");
+    return false;
   }
 }

@@ -26,4 +26,8 @@ class AppStrings {
   static const activateLedSeuilSubTitle = "En fonction du seuil";
   static const modifySeuil = "Modification du seuil";
   static const selectedValueSeuil = "Valeur sélectionnée :";
+  static const informationThresholdTemperature =
+      "Si la température actuelle est supérieure au seuil, alors on allume la lumière.";
+  static const informationThresholdLuminosity =
+      "Si la luminosité actuelle est inférieure au seuil, alors on allume la lumière.";
 }

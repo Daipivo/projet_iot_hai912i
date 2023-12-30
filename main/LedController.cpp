@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #include "LedController.h"
 
 LedController::LedController(int analogPin, AsyncWebServer* server) 
@@ -30,16 +31,22 @@ bool LedController::isLedOn() {
 }
 
 void LedController::turnOnLed() {
-    digitalWrite(_analogPin, HIGH);
-    _isLedOn = true;
+    if (!_isLedOn) {
+        digitalWrite(_analogPin, HIGH);
+        _isLedOn = true;
+    }
 }
 
 void LedController::turnOffLed() {
-    digitalWrite(_analogPin, LOW);
-    _isLedOn = false;
+    if (_isLedOn) {
+        digitalWrite(_analogPin, LOW);
+        _isLedOn = false;
+    }
 }
 
+
 void LedController::onSeuilLuminositeEvenement(bool estEnDessousSeuil) {
+    
     estEnDessousSeuil ? turnOnLed() : turnOffLed();
 }
 
@@ -49,13 +56,14 @@ void LedController::onSeuilTemperatureEvenement(bool estEnDessousSeuil) {
 
 void LedController::onEvenement(const String& typeEvenement, bool etat) {
   
+    // Priorité à la luminosité
     if (typeEvenement == "luminosite") {
-      onSeuilLuminositeEvenement(etat);
-    } else {
-      onSeuilTemperatureEvenement(etat);
+        onSeuilLuminositeEvenement(etat);
+    } else {  // La température ne change l'état de la LED que si la luminosité n'a pas déjà allumé la LED
+        onSeuilTemperatureEvenement(etat);
     }
-    
 }
+
 
 
 void LedController::handle() {

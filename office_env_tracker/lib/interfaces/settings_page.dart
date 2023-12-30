@@ -30,36 +30,37 @@ class _SettingsPageState extends State<SettingsPage>
   void initState() {
     super.initState();
     sensorService = SensorDataService();
+    sensorService.addListener(_updateSensorData);
     temperatureSensor = sensorService.temperatureSensor;
     luminositySensor = sensorService.luminositySensor;
-
     selectedSensor = temperatureSensor;
-
-    // S'abonner au listener
-    sensorService.addListener(_updateSensorData);
-
-    loadData();
+    _updateSensorSelection();
   }
 
   void _updateSensorData() {
-    var sensorService = SensorDataService();
     setState(() {
-      temperatureSensor = sensorService.temperatureSensor;
-      luminositySensor = sensorService.luminositySensor;
-
-      if (selectedSensor.type == AppStrings.temperature) {
-        selectedSensor = temperatureSensor;
-      } else if (selectedSensor.type == AppStrings.luminosity) {
-        selectedSensor = luminositySensor;
-      }
-      valueText = selectedSensor.valeur.toStringAsFixed(1);
-      seuilText = selectedSensor.seuil.toStringAsFixed(1);
+      _updateSensorSelection();
     });
+  }
+
+  void _updateSensorSelection() {
+    selectedSensor = selectedSensor.type == AppStrings.luminosity
+        ? luminositySensor
+        : temperatureSensor;
+    _updateDisplayValues();
+  }
+
+  void _updateDisplayValues() {
+    log("Coucou");
+    log(seuilText);
+    valueText = selectedSensor.valeur.toStringAsFixed(1);
+    seuilText = selectedSensor.seuil.toStringAsFixed(1);
+    log(seuilText);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state); // Ajouter cet appel
+    super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       loadData();
     }
@@ -67,59 +68,50 @@ class _SettingsPageState extends State<SettingsPage>
 
   @override
   void dispose() {
-    SensorDataService().removeListener(_updateSensorData);
+    sensorService.removeListener(_updateSensorData);
     super.dispose();
   }
 
   Future<void> loadData() async {
-    setState(() {
-      valueText = AppStrings.loadingData;
-      seuilText = AppStrings.loadingData;
-    });
+    setState(() => _setLoadingState());
 
     try {
-      var sensorService = SensorDataService();
-
-      if (selectedSensor.type == AppStrings.temperature) {
-        Map<String, dynamic> data = await fetchData("temperature");
-
-        double tempValeur = double.parse(data['temperature'].toString());
-        double tempSeuil = double.parse(data['threshold'].toString());
-        bool tempAutomatique = data['controlEnabled'] == true;
-
-        sensorService.updateTemperatureSensor(
-            tempValeur, tempSeuil, tempAutomatique);
-
-        setState(() {
-          temperatureSensor = sensorService.temperatureSensor;
-          valueText = tempValeur.toStringAsFixed(1);
-          seuilText = tempSeuil.toString();
-        });
-      } else if (selectedSensor.type == AppStrings.luminosity) {
-        Map<String, dynamic> data = await fetchData("luminosity");
-        double lumiValeur = double.parse(data['luminosity'].toString());
-        double lumiSeuil = double.parse(data['threshold'].toString());
-        bool lumiAutomatique = data['controlEnabled'] == true;
-
-        sensorService.updateLuminositySensor(
-            lumiValeur, lumiSeuil, lumiAutomatique);
-
-        setState(() {
-          luminositySensor = sensorService.luminositySensor;
-          valueText = lumiValeur.toStringAsFixed(1);
-          seuilText = lumiSeuil.toString();
-        });
-      }
-    } catch (e) {
-      setState(() {
-        valueText = "Non disponible";
-        seuilText = "Non disponible";
-      });
-    }
-
-    if (mounted) {
+      await _fetchSensorData();
+      _updateSensorSelection();
       setState(() {});
+    } catch (e) {
+      setState(() => _setErrorState());
     }
+  }
+
+  Future<void> _fetchSensorData() async {
+    if (selectedSensor.type == AppStrings.temperature) {
+      Map<String, dynamic> data = await fetchData("temperature");
+      double tempValeur = double.parse(data['temperature'].toString());
+      double tempSeuil = double.parse(data['threshold'].toString());
+      bool tempAutomatique = data['controlEnabled'] == true;
+
+      sensorService.updateTemperatureSensor(
+          tempValeur, tempSeuil, tempAutomatique);
+    } else if (selectedSensor.type == AppStrings.luminosity) {
+      Map<String, dynamic> data = await fetchData("luminosity");
+      double lumiValeur = double.parse(data['luminosity'].toString());
+      double lumiSeuil = double.parse(data['threshold'].toString());
+      bool lumiAutomatique = data['controlEnabled'] == true;
+
+      sensorService.updateLuminositySensor(
+          lumiValeur, lumiSeuil, lumiAutomatique);
+    }
+  }
+
+  void _setLoadingState() {
+    valueText = AppStrings.loadingData;
+    seuilText = AppStrings.loadingData;
+  }
+
+  void _setErrorState() {
+    valueText = "Non disponible";
+    seuilText = "Non disponible";
   }
 
   @override
@@ -233,17 +225,31 @@ class _SettingsPageState extends State<SettingsPage>
               ),
             ),
             const SizedBox(height: 10),
-            // Row pour text1 et text2
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  AppStrings.seuil,
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      AppStrings.seuil,
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(
+                        width: 8), // Espace entre le texte "Seuil" et l'icône
+                    GestureDetector(
+                      onTap: () =>
+                          _showThresholdInfo(context, selectedSensor.type),
+                      child: const Icon(
+                        Icons.info_outline,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8), // Espace entre Text1 et Text2
                 Text(
                   seuilDisplay,
                   style: const TextStyle(
@@ -252,6 +258,7 @@ class _SettingsPageState extends State<SettingsPage>
                 ),
               ],
             ),
+
             const SizedBox(height: 10),
             Container(
               padding: EdgeInsets.zero, // Supprime tout padding interne
@@ -265,26 +272,22 @@ class _SettingsPageState extends State<SettingsPage>
                   child: Switch(
                     value: sensor.automatique,
                     onChanged: (bool newValue) async {
-                      String url =
-                          "http://192.168.4.1/$urlManageControl/control/${newValue ? 'on' : 'off'}";
-                      try {
-                        final response = await manageControl(url);
-                        if (response.statusCode == 200) {
-                          // Mise à jour de l'état global
-                          if (sensor.type == AppStrings.temperature) {
-                            sensorService.updateTemperatureSensor(
-                                sensor.valeur, sensor.seuil, newValue);
-                          } else if (sensor.type == AppStrings.luminosity) {
-                            sensorService.updateLuminositySensor(
-                                sensor.valeur, sensor.seuil, newValue);
-                          }
-                          // Mise à jour de l'état local
-                          _updateSensorData();
-                        } else {
-                          log("Échec de la mise à jour: ${response.statusCode}");
+                      String controlUrl =
+                          "$urlBase/$urlManageControl/control/${newValue ? 'on' : 'off'}";
+                      bool success = await manageControl(controlUrl);
+                      if (success) {
+                        // Mise à jour de l'état global
+                        if (sensor.type == AppStrings.temperature) {
+                          sensorService.updateTemperatureSensor(
+                              sensor.valeur, sensor.seuil, newValue);
+                        } else if (sensor.type == AppStrings.luminosity) {
+                          sensorService.updateLuminositySensor(
+                              sensor.valeur, sensor.seuil, newValue);
                         }
-                      } catch (e) {
-                        log("Erreur: $e");
+                        // Mise à jour de l'état local
+                        _updateSensorData();
+                      } else {
+                        log("Échec de la mise à jour de l'état du capteur.");
                       }
                     },
                   ),
@@ -310,9 +313,6 @@ class _SettingsPageState extends State<SettingsPage>
     // Si le seuil est en dehors de la plage valide, le définir sur la valeur minimale
     sliderValue =
         (sliderValue >= min && sliderValue <= max) ? sliderValue : min;
-
-    String urlChangeThreshold =
-        sensor.type == AppStrings.temperature ? "temperature" : "luminosity";
 
     // Construire le label pour le Slider
     String valueLabel = isLuminositySensor
@@ -352,25 +352,22 @@ class _SettingsPageState extends State<SettingsPage>
                         });
                       },
                       onChangeEnd: (double value) async {
-                        String url =
-                            "http://192.168.4.1/$urlChangeThreshold/threshold";
-                        try {
-                          log(url);
-                          final response = await http.put(
-                            Uri.parse(url),
-                            headers: {"Content-Type": "application/json"},
-                            body:
-                                json.encode({'value': sensor.seuil.toString()}),
-                          );
-                          if (response.statusCode == 200) {
-                            log("Seuil réglé à: ${sensor.seuil}");
-                            loadData();
-                          } else {
-                            log("Erreur: Code de statut ${response.statusCode}");
-                            log("Réponse: ${response.body}");
+                        bool success =
+                            await updateSensorThreshold(sensor, sensor.seuil);
+                        if (success) {
+                          if (mounted) {
+                            setState(() {
+                              _updateDisplayValues();
+                            });
                           }
-                        } catch (e) {
-                          log("Exception lors de la requête PUT: $e");
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Échec de la mise à jour du seuil")),
+                            );
+                          }
                         }
                       }),
                 ),
@@ -396,7 +393,32 @@ class _SettingsPageState extends State<SettingsPage>
   void _onSensorSelected(Sensor sensor) {
     setState(() {
       selectedSensor = sensor;
+      _updateDisplayValues();
     });
     loadData();
+  }
+
+  void _showThresholdInfo(BuildContext context, String type) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Information sur le seuil"),
+          content: Text(
+            type == AppStrings.temperature
+                ? AppStrings.informationThresholdTemperature
+                : AppStrings.informationThresholdLuminosity,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Fermer"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

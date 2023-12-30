@@ -14,47 +14,102 @@ class VisualizationPage extends StatefulWidget {
 class VisualizationPageState extends State<VisualizationPage>
     with WidgetsBindingObserver {
   String selectedRoom = 'Bureau 1';
-
   bool isLightOn = false;
-
   bool isAutomatic = false;
-
   String temperature = '';
   String luminosity = '';
-
   late Sensor temperatureSensor;
   late Sensor luminositySensor;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(8.0);
+  late final SensorDataService
+      sensorService; // Utilisation d'une instance unique
 
   @override
   void initState() {
     super.initState();
-    var sensorService = SensorDataService();
+    sensorService = SensorDataService(); // Initialisation de l'instance unique
+    temperatureSensor = sensorService.temperatureSensor;
+    luminositySensor = sensorService.luminositySensor;
     sensorService.addListener(_updateSensorData);
     loadData();
   }
 
   void _updateSensorData() {
-    var sensorService = SensorDataService();
     setState(() {
-      temperatureSensor = sensorService.temperatureSensor;
-      luminositySensor = sensorService.luminositySensor;
-      temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
-      luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
-      isAutomatic =
-          temperatureSensor.automatique || luminositySensor.automatique;
-
-      bool isTemperatureHigh =
-          temperatureSensor.valeur > temperatureSensor.seuil;
-      bool isLuminosityLow = luminositySensor.valeur < luminositySensor.seuil;
-      isLightOn = isTemperatureHigh || isLuminosityLow;
+      _setSensorData();
+      _calculateLightStatus();
     });
+  }
+
+  void _setSensorData() {
+    temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
+    luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
+    isAutomatic = temperatureSensor.automatique || luminositySensor.automatique;
+  }
+
+  void _calculateLightStatus() {
+    bool isTemperatureHigh = temperatureSensor.valeur > temperatureSensor.seuil;
+    bool isLuminosityLow = luminositySensor.valeur < luminositySensor.seuil;
+    bool shouldBeOn = (isTemperatureHigh || isLuminosityLow) && isAutomatic;
+
+    if (!isAutomatic) {
+      shouldBeOn = isLightOn;
+    }
+
+    isLightOn = shouldBeOn;
+  }
+
+  Future<void> loadData() async {
+    setState(() => _setLoadingState());
+
+    try {
+      await _fetchAndUpdateSensorData();
+      _setSensorData();
+      _calculateLightStatus();
+    } catch (e) {
+      _setErrorState();
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _setLoadingState() {
+    temperature = AppStrings.loadingData;
+    luminosity = AppStrings.loadingData;
+  }
+
+  void _setErrorState() {
+    temperature = "Non disponible";
+    luminosity = "Non disponible";
+    isLightOn = false;
+  }
+
+  Future<void> _fetchAndUpdateSensorData() async {
+    String ledStatus = await fetchLedStatus();
+    isLightOn = ledStatus == "LED allumée";
+
+    var dataTemperature = await fetchData("temperature");
+    var dataLuminosity = await fetchData("luminosity");
+
+    sensorService.updateTemperatureSensor(
+      double.parse(dataTemperature['temperature'].toString()),
+      double.parse(dataTemperature['threshold'].toString()),
+      dataTemperature['controlEnabled'] == true,
+    );
+
+    sensorService.updateLuminositySensor(
+      double.parse(dataLuminosity['luminosity'].toString()),
+      double.parse(dataLuminosity['threshold'].toString()),
+      dataLuminosity['controlEnabled'] == true,
+    );
   }
 
   @override
   void dispose() {
-    SensorDataService().removeListener(_updateSensorData);
+    sensorService.removeListener(_updateSensorData);
     super.dispose();
   }
 
@@ -66,57 +121,6 @@ class VisualizationPageState extends State<VisualizationPage>
     }
   }
 
-  Future<void> loadData() async {
-    setState(() {
-      temperature = AppStrings.loadingData;
-      luminosity = AppStrings.loadingData;
-    });
-
-    try {
-      var sensorService = SensorDataService();
-
-      String ledStatus = await fetchLedStatus();
-      isLightOn = ledStatus == "LED allumée";
-
-      Map<String, dynamic> dataTemperature = await fetchData("temperature");
-
-      double tempValeur =
-          double.parse(dataTemperature['temperature'].toString());
-      double tempSeuil = double.parse(dataTemperature['threshold'].toString());
-      bool tempAutomatique = dataTemperature['controlEnabled'] == true;
-
-      sensorService.updateTemperatureSensor(
-          tempValeur, tempSeuil, tempAutomatique);
-
-      Map<String, dynamic> dataLuminosity = await fetchData("luminosity");
-
-      double lumiValeur = double.parse(dataLuminosity['luminosity'].toString());
-      double lumiSeuil = double.parse(dataLuminosity['threshold'].toString());
-      bool lumiAutomatique = dataLuminosity['controlEnabled'] == true;
-
-      sensorService.updateLuminositySensor(
-          lumiValeur, lumiSeuil, lumiAutomatique);
-
-      // Utiliser les données mises à jour depuis le service singleton
-      setState(() {
-        temperatureSensor = sensorService.temperatureSensor;
-        luminositySensor = sensorService.luminositySensor;
-
-        temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
-        luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
-      });
-    } catch (e) {
-      setState(() {
-        temperature = "Non disponible";
-        luminosity = "Non disponible";
-        isLightOn = false;
-      });
-    }
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,9 +128,6 @@ class VisualizationPageState extends State<VisualizationPage>
         backgroundColor: AppColors.primaryColor,
         title: const Text(
             style: TextStyle(fontSize: 18), AppStrings.titleVisualizationPage),
-        actions: [
-          // Ajoutez des actions si nécessaire
-        ],
       ),
       backgroundColor: AppColors.primaryColor,
       body: RefreshIndicator(
