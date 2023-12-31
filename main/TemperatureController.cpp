@@ -1,4 +1,5 @@
 #include "TemperatureController.h"
+#include "FirebaseController.h"
 
 const float TemperatureController::R1 = 10000.0; // résistance fixe
 const float TemperatureController::T0 = 25.0 + 273.15; // Température de référence en Kelvin
@@ -34,10 +35,14 @@ void TemperatureController::init() {
     });
 
     _server->on("/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    
     float temperature = this->getTemperature();
     bool temperatureControlState = _temperatureControlEnabled;
     float temperatureThreshold = _temperatureThreshold;
 
+
+
+    FirebaseController::getInstance().sendSensorData(temperature, temperatureControlState, temperatureThreshold, "temperature");
     // Construction de l'objet JSON
     DynamicJsonDocument doc(1024);
     doc["temperature"] = temperature;

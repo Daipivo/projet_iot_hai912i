@@ -4,6 +4,7 @@ import '../utils/commons.dart';
 import '../model/sensor.dart';
 import '../utils/network_utils.dart';
 import '../services/sensor_data.dart';
+import '../services/firestore.dart';
 import 'dart:developer';
 
 class VisualizationPage extends StatefulWidget {
@@ -13,6 +14,9 @@ class VisualizationPage extends StatefulWidget {
 
 class VisualizationPageState extends State<VisualizationPage>
     with WidgetsBindingObserver {
+  List<Map<String, dynamic>> rooms = [];
+
+  late FirestoreService firestoreService;
   String selectedRoom = 'Bureau 1';
   bool isAutomatic = false;
   String temperature = '';
@@ -29,11 +33,18 @@ class VisualizationPageState extends State<VisualizationPage>
   @override
   void initState() {
     super.initState();
+    firestoreService = FirestoreService.instance;
+    // _loadRooms();
     sensorService = SensorDataService(); // Initialisation de l'instance unique
     temperatureSensor = sensorService.temperatureSensor;
     luminositySensor = sensorService.luminositySensor;
     sensorService.addListener(_updateSensorData);
     loadData();
+  }
+
+  Future<void> _loadRooms() async {
+    rooms = await firestoreService.getRooms();
+    if (mounted) setState(() {});
   }
 
   void _updateSensorData() {
@@ -43,13 +54,14 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   void _setSensorData() {
+    // log(rooms.length.toString());
     temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
     luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
   }
 
   Future<void> loadData() async {
     setState(() => _setLoadingState());
-
+    // _loadRooms();
     try {
       await _fetchAndUpdateSensorData();
       _setSensorData();

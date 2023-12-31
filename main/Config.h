@@ -1,0 +1,8 @@
+#define API_KEY "AIzaSyD9FWJKrJF7q93V1H0V0vdk8jVjD2Dr6CI"
+#define AP_SSID "ESP32-AccessPoint"
+#define AP_PASSWORD "123456789"
+#define STA_SSID "Livebox-bibou"
+#define STA_PASSWORD "camilleyoann_3457"
+#define USER_EMAIL "yoann.reyne@gmail.com"
+#define USER_PASSWORD "Mhsc34660"
+#define FIREBASE_PROJECT_ID "iotprojectdatabase"

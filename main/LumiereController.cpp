@@ -1,4 +1,6 @@
 #include "LumiereController.h"
+#include "FirebaseController.h"
+
 
 LumiereController::LumiereController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements) 
     : _analogPin(analogPin), _server(server), _gestionnaireEvenements(gestionnaireEvenements) {}
@@ -24,6 +26,8 @@ void LumiereController::init() {
     float luminosite = this->getLuminosity();
     bool luminosityControlState = _luminosityControlEnabled;
     float luminosityThreshold = _luminosityThreshold;
+
+    FirebaseController::getInstance().sendSensorData(luminosite, luminosityControlState, luminosityThreshold, "luminosity");
 
     // Construction de l'objet JSON
     DynamicJsonDocument doc(1024);
