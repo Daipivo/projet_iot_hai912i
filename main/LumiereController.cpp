@@ -23,10 +23,12 @@ void LumiereController::init() {
     }); 
 
     _server->on("/luminosity/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+
     float luminosite = this->getLuminosity();
     bool luminosityControlState = _luminosityControlEnabled;
     float luminosityThreshold = _luminosityThreshold;
-
+ 
+    
     FirebaseController::getInstance().sendSensorData(luminosite, luminosityControlState, luminosityThreshold, "luminosity");
 
     // Construction de l'objet JSON

@@ -24,7 +24,7 @@ AsyncWebServer server(80);
 GestionnaireEvenements gestionnaireEvenements;
 
 // Création des instances de contrôleurs
-WifiController wifiController(AP_SSID, AP_PASSWORD, STA_SSID, STA_PASSWORD);
+WifiController wifiController(STA_SSID, STA_PASSWORD);
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
 LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
@@ -33,11 +33,12 @@ DisplayManager displayManager(tft);
 void setup() {
   Serial.begin(115200);
   
-  wifiController.connect();
   configTime(0, 0, ntpServer);
+  wifiController.connect();
 
   // Initialisation de Firebase
   FirebaseController::getInstance().begin();
+  FirebaseController::getInstance().updateIpAddress(ROOM_LOCATION_ID, wifiController.getLocalIP().toString());
 
   Serial.println("Démarrage du serveur sur le port 80");
   server.begin();

@@ -10,7 +10,7 @@ public:
     static FirebaseController& getInstance();
     void begin();
     bool sendSensorData(float value, bool controlState, float threshold, String sensor);
-
+    bool updateIpAddress(String roomId, String ipAddress);
     // Interdisez la copie
     FirebaseController(FirebaseController const&) = delete;
     void operator=(FirebaseController const&) = delete;

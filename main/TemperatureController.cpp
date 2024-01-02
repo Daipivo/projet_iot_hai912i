@@ -35,11 +35,10 @@ void TemperatureController::init() {
     });
 
     _server->on("/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
-    
+
     float temperature = this->getTemperature();
     bool temperatureControlState = _temperatureControlEnabled;
     float temperatureThreshold = _temperatureThreshold;
-
 
 
     FirebaseController::getInstance().sendSensorData(temperature, temperatureControlState, temperatureThreshold, "temperature");
@@ -76,7 +75,6 @@ void TemperatureController::init() {
     _server->on("/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
         float temperature = this->getTemperature();
         String response = String(temperature) + "°C";
-
         request->send(200, "text/plain", response);
     });
 

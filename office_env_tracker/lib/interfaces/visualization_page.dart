@@ -17,12 +17,18 @@ class VisualizationPageState extends State<VisualizationPage>
   List<Map<String, dynamic>> rooms = [];
 
   late FirestoreService firestoreService;
-  String selectedRoom = 'Bureau 1';
-  bool isAutomatic = false;
+
+  bool isDataAvailable = true;
+
+  String selectedRoomName = '';
+  String selectedIpAddress = '';
+
   String temperature = '';
   String luminosity = '';
+
   late Sensor temperatureSensor;
   late Sensor luminositySensor;
+
   bool isTemperatureLedOn = false;
   bool isLuminosityLedOn = false;
 
@@ -33,17 +39,33 @@ class VisualizationPageState extends State<VisualizationPage>
   @override
   void initState() {
     super.initState();
+
     firestoreService = FirestoreService.instance;
-    // _loadRooms();
-    sensorService = SensorDataService(); // Initialisation de l'instance unique
+    _signInAndFetchData();
+    _loadRooms();
+
+    sensorService = SensorDataService();
     temperatureSensor = sensorService.temperatureSensor;
     luminositySensor = sensorService.luminositySensor;
+
     sensorService.addListener(_updateSensorData);
-    loadData();
+  }
+
+  void _signInAndFetchData() async {
+    await FirestoreService.instance.signInWithEmail(
+      "test@gmail.com",
+      "test",
+    );
   }
 
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
+    selectedRoomName = rooms[0]["name"];
+    selectedIpAddress = rooms[0]["ipAddress"];
+    setUrlBase(selectedIpAddress);
+
+    loadData();
+
     if (mounted) setState(() {});
   }
 
@@ -54,14 +76,17 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   void _setSensorData() {
-    // log(rooms.length.toString());
     temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
     luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
+    isTemperatureLedOn =
+        temperatureSensor.isLedOn; // Utilisez la valeur du capteur
+    isLuminosityLedOn = luminositySensor.isLedOn;
+    isDataAvailable = true;
   }
 
   Future<void> loadData() async {
     setState(() => _setLoadingState());
-    // _loadRooms();
+
     try {
       await _fetchAndUpdateSensorData();
       _setSensorData();
@@ -77,11 +102,19 @@ class VisualizationPageState extends State<VisualizationPage>
   void _setLoadingState() {
     temperature = AppStrings.loadingData;
     luminosity = AppStrings.loadingData;
+    isTemperatureLedOn = false;
+    isLuminosityLedOn = false;
+    isDataAvailable = false;
   }
 
   void _setErrorState() {
-    temperature = "Non disponible";
-    luminosity = "Non disponible";
+    setState(() {
+      temperature = "Non disponible";
+      luminosity = "Non disponible";
+      isTemperatureLedOn = false;
+      isLuminosityLedOn = false;
+      isDataAvailable = false;
+    });
   }
 
   Future<void> _fetchAndUpdateSensorData() async {
@@ -150,7 +183,12 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildCardSensor(BuildContext context, Sensor sensor) {
-    String data = "${sensor.valeur.toStringAsFixed(1)} ${sensor.unit}";
+    String data;
+    if (sensor.type == AppStrings.temperature) {
+      data = temperature; // Utilisez directement la valeur de l'état
+    } else {
+      data = luminosity; // Utilisez directement la valeur de l'état
+    }
     String autoModeText =
         "Mode Automatique : " + (sensor.automatique ? "Activé" : "Désactivé");
     String lightStatusText =
@@ -210,13 +248,19 @@ class VisualizationPageState extends State<VisualizationPage>
                   ),
                 ),
                 Switch(
-                  value: sensor.isLedOn,
-                  onChanged: sensor.automatique
+                  value: (sensor.type == AppStrings.temperature)
+                      ? isTemperatureLedOn
+                      : isLuminosityLedOn,
+                  onChanged: (!isDataAvailable || sensor.automatique)
                       ? null
                       : (bool newValue) {
                           toggleLed(newValue, sensor.type, (bool newState) {
                             setState(() {
-                              sensor.isLedOn = newState;
+                              if (sensor.type == AppStrings.temperature) {
+                                isTemperatureLedOn = newState;
+                              } else {
+                                isLuminosityLedOn = newState;
+                              }
                             });
                           });
                         },
@@ -235,27 +279,30 @@ class VisualizationPageState extends State<VisualizationPage>
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          Commons.buildButton(context, 'Bureau 1', Icons.computer,
-              () => _onRoomSelected('Bureau 1'), selectedRoom),
-          const SizedBox(width: 10.0),
-          Commons.buildButton(context, 'Bureau 2', Icons.computer,
-              () => _onRoomSelected('Bureau 2'), selectedRoom),
-          const SizedBox(width: 10.0),
-          Commons.buildButton(context, 'Bureau 3', Icons.computer,
-              () => _onRoomSelected('Bureau 3'), selectedRoom),
-          const SizedBox(width: 10.0),
-          Commons.buildButton(context, 'Bureau 4', Icons.computer,
-              () => _onRoomSelected('Bureau 4'), selectedRoom),
-        ],
+        children: rooms.map<Widget>((room) {
+          String roomName = room['name'];
+          String ipAddress = room['ipAddress'];
+          return Padding(
+            padding: const EdgeInsets.only(right: 10.0),
+            child: Commons.buildButton(
+              context,
+              roomName,
+              Icons.computer,
+              () => _onRoomSelected(roomName, ipAddress),
+              selectedRoomName,
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  void _onRoomSelected(String roomName) {
-    loadData();
+  void _onRoomSelected(String roomName, String ipAddress) {
     setState(() {
-      selectedRoom = roomName;
+      selectedRoomName = roomName;
+      selectedIpAddress = ipAddress;
+      setUrlBase(selectedIpAddress);
+      loadData();
     });
   }
 }

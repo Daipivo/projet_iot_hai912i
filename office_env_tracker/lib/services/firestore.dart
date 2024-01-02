@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer';
 
 class FirestoreService {
@@ -13,15 +14,32 @@ class FirestoreService {
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<User?> signInWithEmail(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        log('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        log('Wrong password provided for that user.');
+      }
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getRooms() async {
     log("Fetching rooms from Firestore");
     try {
       QuerySnapshot querySnapshot = await firestore.collection('rooms').get();
-      log("JE SUIS LAAA");
-      log("Taille " + querySnapshot.docs.length.toString());
       return querySnapshot.docs
           .map((doc) => {
-                'id': doc.id,
+                'ipAddress': doc['ipAddress'],
                 'name': doc['name'],
               })
           .toList();

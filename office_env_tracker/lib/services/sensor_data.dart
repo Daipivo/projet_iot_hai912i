@@ -13,24 +13,22 @@ class SensorDataService extends ChangeNotifier {
   SensorDataService._internal();
 
   Sensor temperatureSensor = Sensor(
-    type: AppStrings.temperature,
-    icon: Icons.thermostat,
-    valeur: 0.00,
-    seuil: 0.00,
-    unit: '°C',
-    automatique: false,
-    isLedOn: false,
-  );
+      type: AppStrings.temperature,
+      icon: Icons.thermostat,
+      valeur: 0.00,
+      seuil: 0.00,
+      unit: '°C',
+      automatique: false,
+      isLedOn: false);
 
   Sensor luminositySensor = Sensor(
-    type: AppStrings.luminosity,
-    icon: Icons.lightbulb_outline,
-    valeur: 0.00,
-    seuil: 0.00,
-    unit: ' V',
-    automatique: false,
-    isLedOn: false,
-  );
+      type: AppStrings.luminosity,
+      icon: Icons.lightbulb_outline,
+      valeur: 0.00,
+      seuil: 0.00,
+      unit: ' V',
+      automatique: false,
+      isLedOn: false);
 
   void updateTemperatureLed(bool isOn) {
     temperatureSensor.isLedOn = isOn;

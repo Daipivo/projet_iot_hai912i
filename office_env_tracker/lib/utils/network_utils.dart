@@ -7,7 +7,11 @@ import 'dart:async';
 
 import 'package:office_env_tracker/utils/app_theme.dart';
 
-String urlBase = "http://192.168.4.1";
+String urlBase = '127.0.0.1';
+
+void setUrlBase(String ipAddress) {
+  urlBase = "http://$ipAddress";
+}
 
 Future<String> fetchLedStatus(String sensorType) async {
   String url = "$urlBase/${sensorType}Led/status";
@@ -15,8 +19,6 @@ Future<String> fetchLedStatus(String sensorType) async {
     final response =
         await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
-      log(response.body.toString());
-      log("cocucicico");
       return response.body;
     } else {
       log('Réponse HTTP non réussie: ${response.statusCode}');
