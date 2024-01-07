@@ -39,6 +39,7 @@ class FirestoreService {
       QuerySnapshot querySnapshot = await firestore.collection('rooms').get();
       return querySnapshot.docs
           .map((doc) => {
+                'id': doc.id,
                 'ipAddress': doc['ipAddress'],
                 'name': doc['name'],
               })
@@ -63,6 +64,31 @@ class FirestoreService {
     } catch (e) {
       log("Error fetching room: $e");
       return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSensorDataByRoomId(
+      String sensor, String roomId) async {
+    try {
+      // Chemin vers la collection spécifiée par roomId
+
+      String typeSensor =
+          sensor == "Température" ? "temperature" : "luminosity";
+
+      QuerySnapshot querySnapshot = await firestore
+          .collection('measures')
+          .where('roomId', isEqualTo: roomId)
+          .where('type', isEqualTo: typeSensor)
+          .get();
+
+      List<Map<String, dynamic>> documents = querySnapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+      return documents;
+    } catch (e) {
+      log("Error fetching sensor data for room $roomId: $e");
+      return [];
     }
   }
 }

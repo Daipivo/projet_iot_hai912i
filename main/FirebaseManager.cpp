@@ -1,4 +1,4 @@
-  #include "FirebaseController.h"
+  #include "FirebaseManager.h"
   #include "Config.h"
 
   String generateUUID() {
@@ -15,7 +15,7 @@
       return uuid;
   }
   // Constructeur privé pour le singleton
-  FirebaseController::FirebaseController() : lastSendTime(0) {
+  FirebaseManager::FirebaseManager() : lastSendTime(0) {
       config.api_key = API_KEY; 
       auth.user.email = USER_EMAIL;
       auth.user.password = USER_PASSWORD;
@@ -23,13 +23,13 @@
   }
 
   // Méthode d'accès à l'instance singleton
-  FirebaseController& FirebaseController::getInstance() {
-      static FirebaseController instance;
+  FirebaseManager& FirebaseManager::getInstance() {
+      static FirebaseManager instance;
       return instance;
   }
 
   // Méthode pour initialiser Firebase
-  void FirebaseController::begin() {
+  void FirebaseManager::begin() {
       Firebase.begin(&config, &auth);
       while (auth.token.uid == "") {
           delay(1000); // Attendre l'UID
@@ -39,25 +39,25 @@
 
 
   // Méthode pour envoyer les données de température
-  bool FirebaseController::sendSensorData(float value, bool controlState, float threshold, String sensor) {
+  bool FirebaseManager::sendSensorData(float value, String sensor) {
       time_t now;
       time(&now);
       char dateTimeStr[20];
       strftime(dateTimeStr, sizeof(dateTimeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
 
       FirebaseJson content;
+      content.set("fields/type/stringValue", sensor);
+      content.set("fields/roomId/stringValue", ROOM_LOCATION_ID);
       content.set("fields/value/doubleValue", value);
-      content.set("fields/controlEnabled/booleanValue", controlState);
-      content.set("fields/threshold/doubleValue", threshold);
-      content.set("fields/dateTime/stringValue", String(dateTimeStr)); // Ajout de la date et de l'heure
+      content.set("fields/dateTime/stringValue", String(dateTimeStr));
 
       String documentUID = generateUUID();
-      String documentPath = sensor + "/" + ROOM_LOCATION_ID + "/" + documentUID;
+      String documentPath = "measures/" + documentUID;
 
       return Firebase.Firestore.createDocument(&fbdo, project_id.c_str(), "", documentPath.c_str(), content.raw());
   }
 
-  bool FirebaseController::updateIpAddress(String roomId, String ipAddress) {
+  bool FirebaseManager::updateIpAddress(String roomId, String ipAddress) {
     // Créer un chemin de document
     String documentPath = "rooms/" + roomId;
 

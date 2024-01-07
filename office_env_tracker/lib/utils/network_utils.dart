@@ -7,10 +7,10 @@ import 'dart:async';
 
 import 'package:office_env_tracker/utils/app_theme.dart';
 
-String urlBase = '127.0.0.1';
+String urlBase = '127.0.0.1/api';
 
 void setUrlBase(String ipAddress) {
-  urlBase = "http://$ipAddress";
+  urlBase = "http://$ipAddress/api";
 }
 
 Future<String> fetchLedStatus(String sensorType) async {

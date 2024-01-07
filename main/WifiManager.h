@@ -1,12 +1,12 @@
-#ifndef WiFiController_h
-#define WiFiController_h
+#ifndef WiFiManager_h
+#define WiFiManager_h
 
 #include <Arduino.h>
 #include <WiFi.h>
 
-class WifiController {
+class WifiManager {
 public:
-    WifiController(const char* sta_ssid, const char* sta_password);
+    WifiManager(const char* sta_ssid, const char* sta_password);
     void connect();
     bool isConnected();
     IPAddress getLocalIP();

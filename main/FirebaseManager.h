@@ -1,22 +1,22 @@
-#ifndef FirebaseController_h
-#define FirebaseController_h
+#ifndef FirebaseManager_h
+#define FirebaseManager_h
 
 #include <Firebase_ESP_Client.h>
 #include <time.h>
 #include <WiFi.h>
 
-class FirebaseController {
+class FirebaseManager {
 public:
-    static FirebaseController& getInstance();
+    static FirebaseManager& getInstance();
     void begin();
-    bool sendSensorData(float value, bool controlState, float threshold, String sensor);
+    bool sendSensorData(float value, String sensor);
     bool updateIpAddress(String roomId, String ipAddress);
     // Interdisez la copie
-    FirebaseController(FirebaseController const&) = delete;
-    void operator=(FirebaseController const&) = delete;
+    FirebaseManager(FirebaseManager const&) = delete;
+    void operator=(FirebaseManager const&) = delete;
 
 private:
-    FirebaseController();
+    FirebaseManager();
     FirebaseData fbdo;
     FirebaseAuth auth;
     FirebaseConfig config;

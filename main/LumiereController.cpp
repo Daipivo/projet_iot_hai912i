@@ -1,5 +1,5 @@
 #include "LumiereController.h"
-#include "FirebaseController.h"
+#include "FirebaseManager.h"
 
 
 LumiereController::LumiereController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements) 
@@ -12,24 +12,24 @@ float LumiereController::getLuminosity() {
 
 void LumiereController::init() {
     
-    _server->on("/luminosity/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosity/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         _luminosityControlEnabled = true;
         request->send(200, "text/plain", "Contrôle de luminosité activé");
     });
 
-    _server->on("/luminosity/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosity/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
         _luminosityControlEnabled = false;
         request->send(200, "text/plain", "Contrôle de luminosité désactivé");
     }); 
 
-    _server->on("/luminosity/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosity/status", HTTP_GET, [this](AsyncWebServerRequest* request){
 
     float luminosite = this->getLuminosity();
     bool luminosityControlState = _luminosityControlEnabled;
     float luminosityThreshold = _luminosityThreshold;
  
     
-    FirebaseController::getInstance().sendSensorData(luminosite, luminosityControlState, luminosityThreshold, "luminosity");
+    FirebaseManager::getInstance().sendSensorData(luminosite, "luminosity");
 
     // Construction de l'objet JSON
     DynamicJsonDocument doc(1024);
@@ -43,7 +43,7 @@ void LumiereController::init() {
     request->send(200, "application/json", response);
 });
 
-    _server->on("/luminosity/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
+    _server->on("/api/luminosity/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
         DynamicJsonDocument doc(1024);
@@ -57,7 +57,7 @@ void LumiereController::init() {
         }
 });
 
-    _server->on("/luminosity", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosity", HTTP_GET, [this](AsyncWebServerRequest* request){
         float luminosite = this->getLuminosity();
         String response = String(luminosite) + "V";
         request->send(200, "text/plain", response);

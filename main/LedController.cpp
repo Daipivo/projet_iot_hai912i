@@ -10,34 +10,34 @@ void LedController::init() {
 
     // Configurations des endpoints pour chaque LED
     // Luminosity LED
-    _server->on("/luminosityLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosityLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         turnOnLuminosityLed();
         request->send(200, "text/plain; charset=utf-8", "Luminosity LED On");
     });
 
-    _server->on("/luminosityLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosityLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
         turnOffLuminosityLed();
         request->send(200, "text/plain; charset=utf-8", "Luminosity LED Off");
     });
 
     // Temperature LED
-    _server->on("/temperatureLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperatureLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         turnOnTemperatureLed();
         request->send(200, "text/plain; charset=utf-8", "Temperature LED On");
     });
 
-    _server->on("/temperatureLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperatureLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
         turnOffTemperatureLed();
         request->send(200, "text/plain; charset=utf-8", "Temperature LED Off");
     });
 
     // Common status endpoint for both LEDs
-    _server->on("/luminosityLed/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/luminosityLed/status", HTTP_GET, [this](AsyncWebServerRequest* request){
         String status = _isLuminosityLedOn ? "On" : "Off";
         request->send(200, "text/plain; charset=utf-8", status);
     });
   
-    _server->on("/temperatureLed/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperatureLed/status", HTTP_GET, [this](AsyncWebServerRequest* request){
         String status = _isTemperatureLedOn ? "On" : "Off";
         request->send(200, "text/plain; charset=utf-8", status);
     });

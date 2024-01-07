@@ -5,9 +5,8 @@ import '../utils/network_utils.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
 import '../model/sensor.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/sensor_data.dart';
+import 'dart:developer';
 
 class SettingsPage extends StatefulWidget {
   @override

@@ -1,10 +1,10 @@
-#include "WifiController.h"
+#include "WifiManager.h"
 
 
-WifiController::WifiController(const char* sta_ssid, const char* sta_password) 
+WifiManager::WifiManager(const char* sta_ssid, const char* sta_password) 
 : _sta_ssid(sta_ssid), _sta_password(sta_password) {}
 
-void WifiController::connect() {
+void WifiManager::connect() {
     Serial.println("\nDémarrage du Point d'Accès Wi-Fi...");
 
     WiFi.mode(WIFI_STA); // Mode AP+STA
@@ -22,10 +22,10 @@ void WifiController::connect() {
     Serial.println(localIp);
 }
 
-bool WifiController::isConnected() {
+bool WifiManager::isConnected() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-IPAddress WifiController::getLocalIP() {
+IPAddress WifiManager::getLocalIP() {
     return WiFi.localIP();
 }

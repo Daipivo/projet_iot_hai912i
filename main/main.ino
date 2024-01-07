@@ -1,12 +1,12 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <TFT_eSPI.h>
-#include "WifiController.h"
+#include "WifiManager.h"
 #include "TemperatureController.h"
 #include "LumiereController.h"
 #include "LedController.h"
 #include "DisplayManager.h"
-#include "FirebaseController.h" 
+#include "FirebaseManager.h" 
 #include <Wire.h>
 #include "time.h"
 #include "addons/TokenHelper.h"
@@ -24,7 +24,7 @@ AsyncWebServer server(80);
 GestionnaireEvenements gestionnaireEvenements;
 
 // Création des instances de contrôleurs
-WifiController wifiController(STA_SSID, STA_PASSWORD);
+WifiManager wifiManager(STA_SSID, STA_PASSWORD);
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
 LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
@@ -34,11 +34,11 @@ void setup() {
   Serial.begin(115200);
   
   configTime(0, 0, ntpServer);
-  wifiController.connect();
+  wifiManager.connect();
 
   // Initialisation de Firebase
-  FirebaseController::getInstance().begin();
-  FirebaseController::getInstance().updateIpAddress(ROOM_LOCATION_ID, wifiController.getLocalIP().toString());
+  FirebaseManager::getInstance().begin();
+  FirebaseManager::getInstance().updateIpAddress(ROOM_LOCATION_ID, wifiManager.getLocalIP().toString());
 
   Serial.println("Démarrage du serveur sur le port 80");
   server.begin();

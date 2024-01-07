@@ -1,5 +1,5 @@
 #include "TemperatureController.h"
-#include "FirebaseController.h"
+#include "FirebaseManager.h"
 
 const float TemperatureController::R1 = 10000.0; // résistance fixe
 const float TemperatureController::T0 = 25.0 + 273.15; // Température de référence en Kelvin
@@ -24,24 +24,24 @@ float TemperatureController::getTemperature() {
 
 void TemperatureController::init() {
 
-    _server->on("/temperature/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperature/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         _temperatureControlEnabled = true;
         request->send(200, "text/plain", "Contrôle de température activé");
     });
 
-    _server->on("/temperature/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperature/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
         _temperatureControlEnabled = false;
         request->send(200, "text/plain", "Contrôle de température désactivé");
     });
 
-    _server->on("/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
 
     float temperature = this->getTemperature();
     bool temperatureControlState = _temperatureControlEnabled;
     float temperatureThreshold = _temperatureThreshold;
 
 
-    FirebaseController::getInstance().sendSensorData(temperature, temperatureControlState, temperatureThreshold, "temperature");
+    FirebaseManager::getInstance().sendSensorData(temperature, "temperature");
     // Construction de l'objet JSON
     DynamicJsonDocument doc(1024);
     doc["temperature"] = temperature;
@@ -56,7 +56,7 @@ void TemperatureController::init() {
     
     });
 
-   _server->on("/temperature/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
+   _server->on("/api/temperature/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
         DynamicJsonDocument doc(1024);
@@ -72,7 +72,7 @@ void TemperatureController::init() {
 
 
 
-    _server->on("/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
+    _server->on("/api/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
         float temperature = this->getTemperature();
         String response = String(temperature) + "°C";
         request->send(200, "text/plain", response);

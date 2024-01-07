@@ -5,6 +5,7 @@ import '../model/sensor.dart';
 import '../utils/network_utils.dart';
 import '../services/sensor_data.dart';
 import '../services/firestore.dart';
+import '../components/top_navigation_rooms.dart';
 import 'dart:developer';
 
 class VisualizationPage extends StatefulWidget {
@@ -20,8 +21,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
   bool isDataAvailable = true;
 
-  String selectedRoomName = '';
-  String selectedIpAddress = '';
+  late Map<String, dynamic> selectedRoom;
 
   String temperature = '';
   String luminosity = '';
@@ -60,9 +60,8 @@ class VisualizationPageState extends State<VisualizationPage>
 
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
-    selectedRoomName = rooms[0]["name"];
-    selectedIpAddress = rooms[0]["ipAddress"];
-    setUrlBase(selectedIpAddress);
+    selectedRoom = rooms[0];
+    setUrlBase(selectedRoom['ipAddress']);
 
     loadData();
 
@@ -261,6 +260,7 @@ class VisualizationPageState extends State<VisualizationPage>
                               } else {
                                 isLuminosityLedOn = newState;
                               }
+                              sensor.isLedOn = newState;
                             });
                           });
                         },
@@ -274,34 +274,19 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildHorizontalButtonRow() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: rooms.map<Widget>((room) {
-          String roomName = room['name'];
-          String ipAddress = room['ipAddress'];
-          return Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: Commons.buildButton(
-              context,
-              roomName,
-              Icons.computer,
-              () => _onRoomSelected(roomName, ipAddress),
-              selectedRoomName,
-            ),
-          );
-        }).toList(),
-      ),
+    return HorizontalRoomButtons(
+      rooms: rooms,
+      onRoomSelected: (Map<String, dynamic> room) {
+        _onRoomSelected(room);
+      },
+      selectedRoom: selectedRoom,
     );
   }
 
-  void _onRoomSelected(String roomName, String ipAddress) {
+  void _onRoomSelected(Map<String, dynamic> room) {
     setState(() {
-      selectedRoomName = roomName;
-      selectedIpAddress = ipAddress;
-      setUrlBase(selectedIpAddress);
+      selectedRoom = room;
+      setUrlBase(room['ipAddress']);
       loadData();
     });
   }
