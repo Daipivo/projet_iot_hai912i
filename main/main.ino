@@ -1,11 +1,12 @@
 #include <WiFi.h>
+#include <WiFiManager.h>
+#include "DisplayManager.h"
 #include <ESPAsyncWebServer.h>
 #include <TFT_eSPI.h>
-#include "WifiManager.h"
+//#include "WifiManager.h"
 #include "TemperatureController.h"
 #include "LumiereController.h"
 #include "LedController.h"
-#include "DisplayManager.h"
 #include "FirebaseManager.h" 
 #include <Wire.h>
 #include "time.h"
@@ -29,27 +30,34 @@ const unsigned long debounceDelay = 50;
 AsyncWebServer server(80);
 GestionnaireEvenements gestionnaireEvenements;
 
-// Création des instances de contrôleurs
-WifiManager wifiManager(STA_SSID, STA_PASSWORD);
+// Create Controllers for routing
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
 LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
+
+// Create Manager for display on ESP32
 DisplayManager displayManager(tft, ledController, buttonDownPin, buttonTogglePin);
 
 void setup() {
   Serial.begin(115200);
-  
-  configTime(0, 0, ntpServer);
-  wifiManager.connect();
 
-  // Initialisation de Firebase
+  // Init wifiManager
+  WiFiManager wifiManager;
+  wifiManager.autoConnect(ESP_NAME_CONNEXION);
+
+  configTime(0, 0, ntpServer);
+
+  // Getting IP Address
+  IPAddress ip = WiFi.localIP();
+
+  // Init Firebase
   FirebaseManager::getInstance().begin();
-  FirebaseManager::getInstance().updateIpAddress(ROOM_LOCATION_ID, wifiManager.getLocalIP().toString());
+  FirebaseManager::getInstance().updateIpAddress(ROOM_LOCATION_ID, ip.toString());
 
   Serial.println("Démarrage du serveur sur le port 80");
   server.begin();
   Serial.println("Serveur démarré avec succès");
-
+  
   gestionnaireEvenements.enregistrerObservateur("luminosite", &ledController);
   gestionnaireEvenements.enregistrerObservateur("temperature", &ledController);
 
@@ -78,5 +86,5 @@ void loop() {
 
   displayManager.handleButtonLogic();
   
-  delay(1000);  // À utiliser avec prudence
+  delay(1000);
 }

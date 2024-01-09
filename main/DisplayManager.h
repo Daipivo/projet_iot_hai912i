@@ -2,6 +2,7 @@
 #define DISPLAYMANAGER_H
 
 #include <TFT_eSPI.h>
+#include <WiFiManager.h>
 #include "LedController.h"
 
 class DisplayManager {

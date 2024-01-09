@@ -21,19 +21,19 @@ void DisplayManager::updateDisplay(float temperature, float luminosite) {
 
     // Affichage de l'état de la LED de température
     tft.setTextColor(selectedLed == 2 ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
-    tft.printf("LED Température : %s\n", ledController.isTemperatureLedOn() ? "ON" : "OFF");
+    tft.printf("LED Temperature : %s\n", ledController.isTemperatureLedOn() ? "ON" : "OFF");
 
     // Affichage de l'état de la LED de luminosité
     tft.setTextColor(selectedLed == 1 ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, 30);
-    tft.printf("LED Luminosité : %s\n", ledController.isLuminosityLedOn() ? "ON" : "OFF");
+    tft.printf("LED Luminosite : %s\n", ledController.isLuminosityLedOn() ? "ON" : "OFF");
 
     // Affichage des valeurs de température et luminosité
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, 60);
-    tft.printf("Température : %.2f C\n", temperature);
+    tft.printf("Temperature : %.2f C\n", temperature);
     tft.setCursor(0, 90);
-    tft.printf("Luminosité : %.2f V", luminosite);
+    tft.printf("Luminosite : %.2f V", luminosite);
 }
 
 void DisplayManager::handleButtonPress(int buttonPin) {
@@ -62,11 +62,18 @@ void DisplayManager::handleButtonLogic() {
         lastDebounceTime = millis();
     }
 
-    if (currentButtonToggleState != lastButtonToggleState && millis() - lastDebounceTime > debounceDelay) {
+    else if (currentButtonToggleState != lastButtonToggleState && millis() - lastDebounceTime > debounceDelay) {
         if (currentButtonToggleState) {
             handleButtonPress(_buttonTogglePin);
         }
         lastDebounceTime = millis();
+    }
+
+    else if (currentButtonDownState && currentButtonToggleState) {
+        Serial.println("Réinitialisation des paramètres Wi-Fi...");
+        WiFiManager wifiManager;
+        wifiManager.resetSettings();
+        ESP.restart();
     }
 
     lastButtonDownState = currentButtonDownState;
