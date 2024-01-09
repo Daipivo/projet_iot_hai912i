@@ -18,6 +18,8 @@ public:
     void onSeuilLuminositeEvenement(bool estEnDessousSeuil);
     void onSeuilTemperatureEvenement(bool estEnDessousSeuil);
     void onEvenement(const String& typeEvenement, bool etat) override;
+    void toggleLuminosityLed();
+    void toggleTemperatureLed();
 
 private:
     AsyncWebServer* _server;

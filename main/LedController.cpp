@@ -80,6 +80,22 @@ void LedController::onSeuilTemperatureEvenement(bool estEnDessousSeuil) {
     estEnDessousSeuil ? turnOffTemperatureLed() : turnOnTemperatureLed();
 }
 
+void LedController::toggleLuminosityLed() {
+    if (_isLuminosityLedOn) {
+        turnOffLuminosityLed();
+    } else {
+        turnOnLuminosityLed();
+    }
+}
+
+void LedController::toggleTemperatureLed() {
+    if (_isTemperatureLedOn) {
+        turnOffTemperatureLed();
+    } else {
+        turnOnTemperatureLed();
+    }
+}
+
 void LedController::onEvenement(const String& typeEvenement, bool etat) {
     if (typeEvenement == "luminosite") {
         onSeuilLuminositeEvenement(etat);

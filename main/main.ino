@@ -19,6 +19,12 @@ const int temperaturePin = 33;
 const int lumierePin = 32;
 const int luminosityLedPin = 17;
 const int temperatureLedPin = 15;
+const int buttonDownPin = 0; // Bouton pour descendre dans la liste
+const int buttonTogglePin = 35; // Bouton pour changer le statut de la LED
+bool lastButtonDownState = LOW;
+bool lastButtonToggleState = LOW;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;
 
 AsyncWebServer server(80);
 GestionnaireEvenements gestionnaireEvenements;
@@ -28,7 +34,7 @@ WifiManager wifiManager(STA_SSID, STA_PASSWORD);
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
 LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
-DisplayManager displayManager(tft);
+DisplayManager displayManager(tft, ledController, buttonDownPin, buttonTogglePin);
 
 void setup() {
   Serial.begin(115200);
@@ -46,6 +52,7 @@ void setup() {
 
   gestionnaireEvenements.enregistrerObservateur("luminosite", &ledController);
   gestionnaireEvenements.enregistrerObservateur("temperature", &ledController);
+
 
   ledController.init();
   temperatureController.init();
@@ -67,8 +74,9 @@ void loop() {
 
   float temperature = temperatureController.getTemperature();
   float luminosite = lumiereController.getLuminosity();
-
   displayManager.updateDisplay(temperature, luminosite);
 
-  delay(1000);  // À utiliser avec prudence, peut-être remplacé par une gestion du temps non bloquante
+  displayManager.handleButtonLogic();
+  
+  delay(1000);  // À utiliser avec prudence
 }
