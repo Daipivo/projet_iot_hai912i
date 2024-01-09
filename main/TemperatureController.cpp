@@ -56,7 +56,7 @@ void TemperatureController::init() {
     
     });
 
-   _server->on("/api/temperature/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
+   _server->on("/api/temperature/threshold", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
         DynamicJsonDocument doc(1024);

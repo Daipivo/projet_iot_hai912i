@@ -43,7 +43,7 @@ void LumiereController::init() {
     request->send(200, "application/json", response);
 });
 
-    _server->on("/api/luminosity/threshold", HTTP_PUT, [this](AsyncWebServerRequest* request) {},
+    _server->on("/api/luminosity/threshold", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
         DynamicJsonDocument doc(1024);
