@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "GestionnaireEvenements.h"
+#include "EventManager.h"
 #include <ArduinoJson.h>
 
 
@@ -12,14 +12,14 @@
 class TemperatureController {
 public:
 
-    TemperatureController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements);
+    TemperatureController(int analogPin, AsyncWebServer* server, EventManager* eventManager);
     
     float getTemperature();
     void init();
     void handle();
 
 private:
-    GestionnaireEvenements* _gestionnaireEvenements;
+    EventManager* _eventManager;
     bool _temperatureControlEnabled = false;
     float _temperatureThreshold = 0.0;
     int _analogPin;

@@ -2,9 +2,9 @@
 #define LedController_H
 
 #include <ESPAsyncWebServer.h>
-#include "IEvenementObservateur.h" 
+#include "IEventObserver.h" 
 
-class LedController : public IEvenementObservateur {
+class LedController : public IEventObserver {
 public:
     LedController(int luminosityLedPin, int temperatureLedPin, AsyncWebServer* server);
     void init();  

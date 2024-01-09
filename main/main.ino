@@ -3,9 +3,8 @@
 #include "DisplayManager.h"
 #include <ESPAsyncWebServer.h>
 #include <TFT_eSPI.h>
-//#include "WifiManager.h"
 #include "TemperatureController.h"
-#include "LumiereController.h"
+#include "LuminosityController.h"
 #include "LedController.h"
 #include "FirebaseManager.h" 
 #include <Wire.h>
@@ -28,12 +27,12 @@ unsigned long lastDebounceTime = 0;
 const unsigned long debounceDelay = 50;
 
 AsyncWebServer server(80);
-GestionnaireEvenements gestionnaireEvenements;
+EventManager eventManager;
 
 // Create Controllers for routing
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
-TemperatureController temperatureController(temperaturePin, &server, &gestionnaireEvenements);
-LumiereController lumiereController(lumierePin, &server, &gestionnaireEvenements);
+TemperatureController temperatureController(temperaturePin, &server, &eventManager);
+LuminosityController luminosityController(lumierePin, &server, &eventManager);
 
 // Create Manager for display on ESP32
 DisplayManager displayManager(tft, ledController, buttonDownPin, buttonTogglePin);
@@ -58,13 +57,13 @@ void setup() {
   server.begin();
   Serial.println("Serveur démarré avec succès");
   
-  gestionnaireEvenements.enregistrerObservateur("luminosite", &ledController);
-  gestionnaireEvenements.enregistrerObservateur("temperature", &ledController);
+  eventManager.saveObserver("luminosite", &ledController);
+  eventManager.saveObserver("temperature", &ledController);
 
 
   ledController.init();
   temperatureController.init();
-  lumiereController.init();
+  luminosityController.init();
   
   tft.init();
   tft.setRotation(0);
@@ -77,11 +76,12 @@ void setup() {
 
 void loop() {
   temperatureController.handle();
-  lumiereController.handle();
+  luminosityController.handle();
   ledController.handle();
 
   float temperature = temperatureController.getTemperature();
-  float luminosite = lumiereController.getLuminosity();
+  float luminosite = luminosityController.getLuminosity();
+
   displayManager.updateDisplay(temperature, luminosite);
 
   displayManager.handleButtonLogic();

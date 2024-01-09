@@ -6,8 +6,8 @@ const float TemperatureController::T0 = 25.0 + 273.15; // Température de réfé
 const float TemperatureController::R0 = 10000.0; // Résistance du thermistor à T0
 const float TemperatureController::B = 3950.0; // Coefficient B
 
-TemperatureController::TemperatureController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements) 
-    : _analogPin(analogPin), _server(server), _gestionnaireEvenements(gestionnaireEvenements) {}
+TemperatureController::TemperatureController(int analogPin, AsyncWebServer* server, EventManager* eventManager) 
+    : _analogPin(analogPin), _server(server), _eventManager(eventManager) {}
 
 
 float TemperatureController::getTemperature() {
@@ -43,7 +43,7 @@ void TemperatureController::init() {
 
     FirebaseManager::getInstance().sendSensorData(temperature, "temperature");
     // Construction de l'objet JSON
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(256);
     doc["temperature"] = temperature;
     doc["controlEnabled"] = temperatureControlState;
     doc["threshold"] = temperatureThreshold;
@@ -59,7 +59,7 @@ void TemperatureController::init() {
    _server->on("/api/temperature/threshold", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-        DynamicJsonDocument doc(1024);
+        DynamicJsonDocument doc(128);
         deserializeJson(doc, (const char*)data);
         if (doc.containsKey("value")) {
             float value = doc["value"]; 
@@ -84,6 +84,6 @@ void TemperatureController::handle() {
     if(_temperatureControlEnabled) {
         float temperature = getTemperature();
         bool estEnDessousDuSeuil = temperature < _temperatureThreshold;
-        _gestionnaireEvenements->notifierObservateurs("temperature", estEnDessousDuSeuil);
+        _eventManager->notifyObserver("temperature", estEnDessousDuSeuil);
     }
 }

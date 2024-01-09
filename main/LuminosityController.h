@@ -1,26 +1,26 @@
-#ifndef LUMIERECONTROLLER_H
-#define LUMIERECONTROLLER_H
+#ifndef LuminosityController_H
+#define LuminosityController_H
 
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "GestionnaireEvenements.h"
+#include "EventManager.h"
 #include <ArduinoJson.h>
 
-class LumiereController {
+class LuminosityController {
 public:
-    LumiereController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements);
+    LuminosityController(int analogPin, AsyncWebServer* server, EventManager* eventManager);
     
     float getLuminosity();
     void init();
     void handle();
 
 private:
-    GestionnaireEvenements* _gestionnaireEvenements;
+    EventManager* _eventManager;
     bool _luminosityControlEnabled = false;
     float _luminosityThreshold = 0.0;
     int _analogPin;
     AsyncWebServer* _server;
 };
 
-#endif // LUMIERECONTROLLER_H
+#endif // LuminosityController_H

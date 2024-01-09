@@ -1,16 +1,16 @@
-#include "LumiereController.h"
+#include "LuminosityController.h"
 #include "FirebaseManager.h"
 
 
-LumiereController::LumiereController(int analogPin, AsyncWebServer* server, GestionnaireEvenements* gestionnaireEvenements) 
-    : _analogPin(analogPin), _server(server), _gestionnaireEvenements(gestionnaireEvenements) {}
+LuminosityController::LuminosityController(int analogPin, AsyncWebServer* server, EventManager* eventManager) 
+    : _analogPin(analogPin), _server(server), _eventManager(eventManager) {}
 
-float LumiereController::getLuminosity() {
+float LuminosityController::getLuminosity() {
     float Vout = analogRead(_analogPin) * 3.3 / 4095.0; // Convertir la lecture analogique en tension
     return Vout; // Retourne la tension pour le moment.
 }
 
-void LumiereController::init() {
+void LuminosityController::init() {
     
     _server->on("/api/luminosity/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
         _luminosityControlEnabled = true;
@@ -32,7 +32,7 @@ void LumiereController::init() {
     FirebaseManager::getInstance().sendSensorData(luminosite, "luminosity");
 
     // Construction de l'objet JSON
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(256);
     doc["luminosity"] = luminosite;
     doc["controlEnabled"] = luminosityControlState;
     doc["threshold"] = luminosityThreshold;
@@ -46,7 +46,7 @@ void LumiereController::init() {
     _server->on("/api/luminosity/threshold", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
     NULL,
     [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
-        DynamicJsonDocument doc(1024);
+        DynamicJsonDocument doc(128);
         deserializeJson(doc, (const char*)data);
         if (doc.containsKey("value")) {
             float value = doc["value"]; 
@@ -68,11 +68,11 @@ void LumiereController::init() {
 
 }
 
-void LumiereController::handle() {
+void LuminosityController::handle() {
     if(_luminosityControlEnabled) {
         float luminosite = getLuminosity();
         bool estEnDessousDuSeuil = luminosite < _luminosityThreshold;
-        _gestionnaireEvenements->notifierObservateurs("luminosite", estEnDessousDuSeuil);
+        _eventManager->notifyObserver("luminosite", estEnDessousDuSeuil);
     }
 }
 
