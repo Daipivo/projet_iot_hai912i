@@ -95,7 +95,7 @@ Future<bool> updateSensorThreshold(Sensor sensor, double newThreshold) async {
   log(url);
 
   try {
-    final response = await http.put(
+    final response = await http.patch(
       Uri.parse(url),
       headers: {"Content-Type": "application/json"},
       body: json.encode({'value': newThreshold.toString()}),

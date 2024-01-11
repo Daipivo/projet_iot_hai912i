@@ -44,7 +44,7 @@ class SensorDataService extends ChangeNotifier {
     temperatureSensor.valeur = valeur;
     temperatureSensor.seuil = seuil;
     temperatureSensor.automatique = automatique;
-    temperatureSensor.isLedOn = (automatique && valeur > seuil) ||
+    temperatureSensor.isLedOn = (automatique && valeur < seuil) ||
         (!automatique && temperatureSensor.isLedOn);
     notifyListeners();
   }

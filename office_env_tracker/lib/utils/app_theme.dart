@@ -29,7 +29,7 @@ class AppStrings {
   static const modifySeuil = "Modification du seuil";
   static const selectedValueSeuil = "Valeur sélectionnée :";
   static const informationThresholdTemperature =
-      "Si la température actuelle est supérieure au seuil, alors on allume la lumière.";
+      "Si la température actuelle est inférieure au seuil, alors on allume la lumière.";
   static const informationThresholdLuminosity =
       "Si la luminosité actuelle est inférieure au seuil, alors on allume la lumière.";
 }

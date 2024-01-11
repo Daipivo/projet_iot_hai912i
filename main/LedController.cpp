@@ -77,7 +77,7 @@ void LedController::onSeuilLuminositeEvenement(bool estEnDessousSeuil) {
 }
 
 void LedController::onSeuilTemperatureEvenement(bool estEnDessousSeuil) {
-    estEnDessousSeuil ? turnOffTemperatureLed() : turnOnTemperatureLed();
+    estEnDessousSeuil ? turnOnTemperatureLed() : turnOffTemperatureLed();
 }
 
 void LedController::toggleLuminosityLed() {
