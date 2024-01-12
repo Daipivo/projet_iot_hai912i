@@ -8,27 +8,47 @@ void LedController::init() {
     pinMode(_luminosityLedPin, OUTPUT);
     pinMode(_temperatureLedPin, OUTPUT);
 
-    // Configurations des endpoints pour chaque LED
-    // Luminosity LED
-    _server->on("/api/luminosityLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
-        turnOnLuminosityLed();
-        request->send(200, "text/plain; charset=utf-8", "Luminosity LED On");
+    _server->on("/api/luminosityLed", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
+    NULL,
+    [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+        DynamicJsonDocument doc(128);
+        deserializeJson(doc, (const char*)data);
+        if (doc.containsKey("state")) {
+            String state = doc["state"].as<String>(); 
+            if (state == "on") {
+                turnOnLuminosityLed();
+                request->send(200, "text/plain; charset=utf-8", "Luminosity LED turned on");
+            } else if (state == "off") {
+                turnOffLuminosityLed();
+                request->send(200, "text/plain; charset=utf-8", "Luminosity LED turned off");
+            } else {
+                request->send(400, "text/plain; charset=utf-8", "Invalid state");
+            }
+        } else {
+            request->send(400, "text/plain; charset=utf-8", "State parameter is missing");
+        }
     });
 
-    _server->on("/api/luminosityLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
-        turnOffLuminosityLed();
-        request->send(200, "text/plain; charset=utf-8", "Luminosity LED Off");
-    });
-
-    // Temperature LED
-    _server->on("/api/temperatureLed/on", HTTP_GET, [this](AsyncWebServerRequest* request){
-        turnOnTemperatureLed();
-        request->send(200, "text/plain; charset=utf-8", "Temperature LED On");
-    });
-
-    _server->on("/api/temperatureLed/off", HTTP_GET, [this](AsyncWebServerRequest* request){
-        turnOffTemperatureLed();
-        request->send(200, "text/plain; charset=utf-8", "Temperature LED Off");
+    // Endpoint pour changer l'état de la Temperature LED avec PATCH et corps de requête JSON
+    _server->on("/api/temperatureLed", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
+    NULL,
+    [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+        DynamicJsonDocument doc(128); 
+        deserializeJson(doc, (const char*)data);
+        if (doc.containsKey("state")) {
+            String state = doc["state"].as<String>(); 
+            if (state == "on") {
+                turnOnTemperatureLed();
+                request->send(200, "text/plain; charset=utf-8", "Temperature LED turned on");
+            } else if (state == "off") {
+                turnOffTemperatureLed();
+                request->send(200, "text/plain; charset=utf-8", "Temperature LED turned off");
+            } else {
+                request->send(400, "text/plain; charset=utf-8", "Invalid state");
+            }
+        } else {
+            request->send(400, "text/plain; charset=utf-8", "State parameter is missing");
+        }
     });
 
     // Common status endpoint for both LEDs

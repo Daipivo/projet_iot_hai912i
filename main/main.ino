@@ -15,33 +15,52 @@
 const char* ntpServer = "pool.ntp.org";
 
 TFT_eSPI tft = TFT_eSPI();
-const int temperaturePin = 33;
-const int lumierePin = 32;
-const int luminosityLedPin = 17;
-const int temperatureLedPin = 15;
-const int buttonDownPin = 0; // Bouton pour descendre dans la liste
-const int buttonTogglePin = 35; // Bouton pour changer le statut de la LED
-bool lastButtonDownState = LOW;
-bool lastButtonToggleState = LOW;
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50;
 
+// Pin for temperature sensor
+const int temperaturePin = 33;
+
+// Pin for luminosity sensor
+const int luminosityPin = 32;
+
+// Pin for temperature LED
+const int temperatureLedPin = 15;
+
+// Pin for luminosity LED
+const int luminosityLedPin = 17;
+
+// Pin for down button
+const int buttonDownPin = 0; 
+
+// Pin for toggle button
+const int buttonTogglePin = 35; 
+
+// Last state of the down button
+bool lastButtonDownState = LOW;
+
+// Last state of the toggle button
+bool lastButtonToggleState = LOW;
+
+// Create web server on port 80
 AsyncWebServer server(80);
+
+// Initialize manager for events
 EventManager eventManager;
 
-// Create Controllers for routing
+// Initialize controllers for routing
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
 TemperatureController temperatureController(temperaturePin, &server, &eventManager);
-LuminosityController luminosityController(lumierePin, &server, &eventManager);
+LuminosityController luminosityController(luminosityPin, &server, &eventManager);
 
-// Create Manager for display on ESP32
+// Initialize manager for display
 DisplayManager displayManager(tft, ledController, buttonDownPin, buttonTogglePin);
+
+// Initialize wifi manager
+WiFiManager wifiManager;
 
 void setup() {
   Serial.begin(115200);
 
   // Init wifiManager
-  WiFiManager wifiManager;
   wifiManager.autoConnect(ESP_NAME_CONNEXION);
 
   configTime(0, 0, ntpServer);
@@ -60,11 +79,12 @@ void setup() {
   eventManager.saveObserver("luminosite", &ledController);
   eventManager.saveObserver("temperature", &ledController);
 
-
+  // Initialize the controllers
   ledController.init();
   temperatureController.init();
   luminosityController.init();
   
+  // Initialize the TFT display
   tft.init();
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
@@ -75,16 +95,21 @@ void setup() {
 }
 
 void loop() {
+
   temperatureController.handle();
   luminosityController.handle();
   ledController.handle();
 
+  // Get temperature and luminosity values
   float temperature = temperatureController.getTemperature();
-  float luminosite = luminosityController.getLuminosity();
+  float luminosity = luminosityController.getLuminosity();
 
-  displayManager.updateDisplay(temperature, luminosite);
+  // Update sensor values
+  displayManager.updateDisplay(temperature, luminosity);
 
+  // Handle buttons
   displayManager.handleButtonLogic();
   
   delay(1000);
+
 }

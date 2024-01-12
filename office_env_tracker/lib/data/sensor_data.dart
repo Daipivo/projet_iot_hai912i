@@ -3,14 +3,14 @@ import '../utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 
-class SensorDataService extends ChangeNotifier {
-  static final SensorDataService _instance = SensorDataService._internal();
+class SensorData extends ChangeNotifier {
+  static final SensorData _instance = SensorData._internal();
 
-  factory SensorDataService() {
+  factory SensorData() {
     return _instance;
   }
 
-  SensorDataService._internal();
+  SensorData._internal();
 
   Sensor temperatureSensor = Sensor(
       type: AppStrings.temperature,

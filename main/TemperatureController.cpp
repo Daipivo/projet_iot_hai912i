@@ -24,15 +24,28 @@ float TemperatureController::getTemperature() {
 
 void TemperatureController::init() {
 
-    _server->on("/api/temperature/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
-        _temperatureControlEnabled = true;
-        request->send(200, "text/plain", "Contrôle de température activé");
-    });
+    _server->on("/api/temperature/control", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
+    NULL,
+    [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+    DynamicJsonDocument doc(128);
+    deserializeJson(doc, (const char*)data);
 
-    _server->on("/api/temperature/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
-        _temperatureControlEnabled = false;
-        request->send(200, "text/plain", "Contrôle de température désactivé");
-    });
+    if (doc.containsKey("state")) {
+        String state = doc["state"].as<String>();
+        if (state == "on") {
+            _temperatureControlEnabled = true;
+            request->send(200, "text/plain", "Contrôle de température activé");
+        } else if (state == "off") {
+            _temperatureControlEnabled = false;
+            request->send(200, "text/plain", "Contrôle de température désactivé");
+        } else {
+            request->send(400, "text/plain", "État invalide");
+        }
+    } else {
+        request->send(400, "text/plain", "Paramètre 'state' manquant");
+    }
+  });
+
 
     _server->on("/api/temperature/status", HTTP_GET, [this](AsyncWebServerRequest* request){
 

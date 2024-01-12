@@ -12,15 +12,29 @@ float LuminosityController::getLuminosity() {
 
 void LuminosityController::init() {
     
-    _server->on("/api/luminosity/control/on", HTTP_GET, [this](AsyncWebServerRequest* request){
-        _luminosityControlEnabled = true;
-        request->send(200, "text/plain", "Contrôle de luminosité activé");
-    });
+    _server->on("/api/luminosity/control", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
+    NULL,
+    [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+    
+    DynamicJsonDocument doc(128);
+    deserializeJson(doc, (const char*)data);
 
-    _server->on("/api/luminosity/control/off", HTTP_GET, [this](AsyncWebServerRequest* request){
-        _luminosityControlEnabled = false;
-        request->send(200, "text/plain", "Contrôle de luminosité désactivé");
-    }); 
+    if (doc.containsKey("state")) {
+        String state = doc["state"].as<String>();
+        if (state == "on") {
+            _luminosityControlEnabled = true;
+            request->send(200, "text/plain", "Contrôle de luminosité activé");
+        } else if (state == "off") {
+            _luminosityControlEnabled = false;
+            request->send(200, "text/plain", "Contrôle de luminosité désactivé");
+        } else {
+            request->send(400, "text/plain", "État invalide");
+        }
+    } else {
+        request->send(400, "text/plain", "Paramètre 'state' manquant");
+    }
+  });
+
 
     _server->on("/api/luminosity/status", HTTP_GET, [this](AsyncWebServerRequest* request){
 

@@ -2,11 +2,12 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
-import '../services/firestore.dart';
+import '../services/firestore_service.dart';
 import '../components/top_navigation_rooms.dart';
 import 'dart:math' hide log;
-import '../utils/network_utils.dart';
+import '../services/api_service.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../services/api_service.dart';
 
 class StatisticsPage extends StatefulWidget {
   @override
@@ -18,6 +19,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   List<Map<String, dynamic>> rooms = [];
   List<Map<String, dynamic>> temperatureData = [];
   List<Map<String, dynamic>> luminosityData = [];
+
+  late APIService apiService;
 
   Map<String, dynamic> selectedRoom = {};
 
@@ -210,7 +213,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   void _onRoomSelected(Map<String, dynamic> room) {
     setState(() {
       selectedRoom = room;
-      setUrlBase(room['ipAddress']);
+      apiService.setUrlBase(room['ipAddress']);
       _handleRefreshData();
     });
   }

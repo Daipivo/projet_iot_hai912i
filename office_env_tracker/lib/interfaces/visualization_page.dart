@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
 import '../model/sensor.dart';
-import '../utils/network_utils.dart';
-import '../services/sensor_data.dart';
-import '../services/firestore.dart';
+import '../services/api_service.dart';
+import '../data/sensor_data.dart';
+import '../services/firestore_service.dart';
 import '../components/top_navigation_rooms.dart';
 import 'dart:developer';
+import '../services/api_service.dart';
 
 class VisualizationPage extends StatefulWidget {
   @override
@@ -32,9 +33,10 @@ class VisualizationPageState extends State<VisualizationPage>
   bool isTemperatureLedOn = false;
   bool isLuminosityLedOn = false;
 
+  late APIService apiService;
+
   final EdgeInsets elementPadding = const EdgeInsets.all(8.0);
-  late final SensorDataService
-      sensorService; // Utilisation d'une instance unique
+  late final SensorData sensorData; // Utilisation d'une instance unique
 
   @override
   void initState() {
@@ -44,11 +46,13 @@ class VisualizationPageState extends State<VisualizationPage>
     _signInAndFetchData();
     _loadRooms();
 
-    sensorService = SensorDataService();
-    temperatureSensor = sensorService.temperatureSensor;
-    luminositySensor = sensorService.luminositySensor;
+    sensorData = SensorData();
+    apiService = APIService();
 
-    sensorService.addListener(_updateSensorData);
+    temperatureSensor = sensorData.temperatureSensor;
+    luminositySensor = sensorData.luminositySensor;
+
+    sensorData.addListener(_updateSensorData);
   }
 
   void _signInAndFetchData() async {
@@ -61,7 +65,7 @@ class VisualizationPageState extends State<VisualizationPage>
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
     selectedRoom = rooms[0];
-    setUrlBase(selectedRoom['ipAddress']);
+    apiService.setUrlBase(selectedRoom['ipAddress']);
 
     loadData();
 
@@ -118,25 +122,26 @@ class VisualizationPageState extends State<VisualizationPage>
 
   Future<void> _fetchAndUpdateSensorData() async {
     String ledStatusTemperature =
-        await fetchLedStatus(AppStrings.temperatureUrl);
+        await apiService.fetchLedStatus(AppStrings.temperatureUrl);
     isTemperatureLedOn = ledStatusTemperature == "On";
 
-    String ledStatusLuminosity = await fetchLedStatus(AppStrings.luminosityUrl);
+    String ledStatusLuminosity =
+        await apiService.fetchLedStatus(AppStrings.luminosityUrl);
     isLuminosityLedOn = ledStatusLuminosity == "On";
 
-    var dataTemperature = await fetchData("temperature");
-    var dataLuminosity = await fetchData("luminosity");
+    var dataTemperature = await apiService.fetchData("temperature");
+    var dataLuminosity = await apiService.fetchData("luminosity");
 
-    sensorService.updateTemperatureLed(isTemperatureLedOn);
-    sensorService.updateLuminosityLed(isLuminosityLedOn);
+    sensorData.updateTemperatureLed(isTemperatureLedOn);
+    sensorData.updateLuminosityLed(isLuminosityLedOn);
 
-    sensorService.updateTemperatureSensor(
+    sensorData.updateTemperatureSensor(
       double.parse(dataTemperature['temperature'].toString()),
       double.parse(dataTemperature['threshold'].toString()),
       dataTemperature['controlEnabled'] == true,
     );
 
-    sensorService.updateLuminositySensor(
+    sensorData.updateLuminositySensor(
       double.parse(dataLuminosity['luminosity'].toString()),
       double.parse(dataLuminosity['threshold'].toString()),
       dataLuminosity['controlEnabled'] == true,
@@ -145,7 +150,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
   @override
   void dispose() {
-    sensorService.removeListener(_updateSensorData);
+    sensorData.removeListener(_updateSensorData);
     super.dispose();
   }
 
@@ -253,7 +258,8 @@ class VisualizationPageState extends State<VisualizationPage>
                   onChanged: (!isDataAvailable || sensor.automatique)
                       ? null
                       : (bool newValue) {
-                          toggleLed(newValue, sensor.type, (bool newState) {
+                          apiService.toggleLed(newValue, sensor.type,
+                              (bool newState) {
                             setState(() {
                               if (sensor.type == AppStrings.temperature) {
                                 isTemperatureLedOn = newState;
@@ -286,7 +292,7 @@ class VisualizationPageState extends State<VisualizationPage>
   void _onRoomSelected(Map<String, dynamic> room) {
     setState(() {
       selectedRoom = room;
-      setUrlBase(room['ipAddress']);
+      apiService.setUrlBase(room['ipAddress']);
       loadData();
     });
   }

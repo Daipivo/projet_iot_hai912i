@@ -1,11 +1,11 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import '../utils/network_utils.dart';
+import '../services/api_service.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
 import '../model/sensor.dart';
-import '../services/sensor_data.dart';
+import '../data/sensor_data.dart';
 import 'dart:developer';
 
 class SettingsPage extends StatefulWidget {
@@ -21,17 +21,19 @@ class _SettingsPageState extends State<SettingsPage>
   late Sensor temperatureSensor;
   late Sensor luminositySensor;
   late Sensor selectedSensor;
-  late SensorDataService sensorService;
+  late SensorData sensorData;
+  late APIService apiService;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(16.0);
 
   @override
   void initState() {
     super.initState();
-    sensorService = SensorDataService();
-    sensorService.addListener(_updateSensorData);
-    temperatureSensor = sensorService.temperatureSensor;
-    luminositySensor = sensorService.luminositySensor;
+    sensorData = SensorData();
+    apiService = APIService();
+    sensorData.addListener(_updateSensorData);
+    temperatureSensor = sensorData.temperatureSensor;
+    luminositySensor = sensorData.luminositySensor;
     selectedSensor = temperatureSensor;
     _updateSensorSelection();
   }
@@ -64,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage>
 
   @override
   void dispose() {
-    sensorService.removeListener(_updateSensorData);
+    sensorData.removeListener(_updateSensorData);
     super.dispose();
   }
 
@@ -82,21 +84,20 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> _fetchSensorData() async {
     if (selectedSensor.type == AppStrings.temperature) {
-      Map<String, dynamic> data = await fetchData("temperature");
+      Map<String, dynamic> data = await apiService.fetchData("temperature");
       double tempValeur = double.parse(data['temperature'].toString());
       double tempSeuil = double.parse(data['threshold'].toString());
       bool tempAutomatique = data['controlEnabled'] == true;
 
-      sensorService.updateTemperatureSensor(
+      sensorData.updateTemperatureSensor(
           tempValeur, tempSeuil, tempAutomatique);
     } else if (selectedSensor.type == AppStrings.luminosity) {
-      Map<String, dynamic> data = await fetchData("luminosity");
+      Map<String, dynamic> data = await apiService.fetchData("luminosity");
       double lumiValeur = double.parse(data['luminosity'].toString());
       double lumiSeuil = double.parse(data['threshold'].toString());
       bool lumiAutomatique = data['controlEnabled'] == true;
 
-      sensorService.updateLuminositySensor(
-          lumiValeur, lumiSeuil, lumiAutomatique);
+      sensorData.updateLuminositySensor(lumiValeur, lumiSeuil, lumiAutomatique);
     }
   }
 
@@ -180,9 +181,6 @@ class _SettingsPageState extends State<SettingsPage>
             seuilText == "Chargement...")
         ? seuilText
         : "${seuilText}${sensor.type == AppStrings.temperature ? '°C' : ' V'}";
-
-    String urlManageControl =
-        sensor.type == AppStrings.temperature ? "temperature" : "luminosity";
 
     return Card(
       color: AppColors.cardColor,
@@ -268,16 +266,15 @@ class _SettingsPageState extends State<SettingsPage>
                   child: Switch(
                     value: sensor.automatique,
                     onChanged: (bool newValue) async {
-                      String controlUrl =
-                          "$urlBase/$urlManageControl/control/${newValue ? 'on' : 'off'}";
-                      bool success = await manageControl(controlUrl);
+                      bool success =
+                          await apiService.manageControl(sensor, newValue);
                       if (success) {
                         // Mise à jour de l'état global
                         if (sensor.type == AppStrings.temperature) {
-                          sensorService.updateTemperatureSensor(
+                          sensorData.updateTemperatureSensor(
                               sensor.valeur, sensor.seuil, newValue);
                         } else if (sensor.type == AppStrings.luminosity) {
-                          sensorService.updateLuminositySensor(
+                          sensorData.updateLuminositySensor(
                               sensor.valeur, sensor.seuil, newValue);
                         }
                         // Mise à jour de l'état local
@@ -348,20 +345,20 @@ class _SettingsPageState extends State<SettingsPage>
                         });
                       },
                       onChangeEnd: (double value) async {
-                        bool success =
-                            await updateSensorThreshold(sensor, sensor.seuil);
+                        bool success = await apiService.updateSensorThreshold(
+                            sensor, sensor.seuil);
                         if (success) {
                           if (mounted) {
                             setState(() {
                               _updateDisplayValues();
                               if (sensor.type == AppStrings.temperature) {
-                                sensorService.updateTemperatureSensor(
+                                sensorData.updateTemperatureSensor(
                                   sensor.valeur,
                                   sensor.seuil,
                                   sensor.automatique,
                                 );
                               } else if (sensor.type == AppStrings.luminosity) {
-                                sensorService.updateLuminositySensor(
+                                sensorData.updateLuminositySensor(
                                   sensor.valeur,
                                   sensor.seuil,
                                   sensor.automatique,
