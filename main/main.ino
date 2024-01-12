@@ -11,6 +11,8 @@
 #include "time.h"
 #include "addons/TokenHelper.h"
 #include "Config.h"
+#include "MemoryManager.h"
+
 
 const char* ntpServer = "pool.ntp.org";
 
@@ -45,6 +47,7 @@ AsyncWebServer server(80);
 
 // Initialize manager for events
 EventManager eventManager;
+MemoryManager memoryManager;
 
 // Initialize controllers for routing
 LedController ledController(luminosityLedPin, temperatureLedPin, &server);
@@ -83,6 +86,8 @@ void setup() {
   ledController.init();
   temperatureController.init();
   luminosityController.init();
+
+  memoryManager.updateMemoryUsage();
   
   // Initialize the TFT display
   tft.init();
@@ -103,12 +108,16 @@ void loop() {
   // Get temperature and luminosity values
   float temperature = temperatureController.getTemperature();
   float luminosity = luminosityController.getLuminosity();
+  float heapUsage = memoryManager.getHeapUsagePercentage();
+  float memoryFlashUsage = memoryManager.getFlashMemoryUsage();
 
   // Update sensor values
-  displayManager.updateDisplay(temperature, luminosity);
+  displayManager.updateDisplay(temperature, luminosity, heapUsage, memoryFlashUsage);
 
   // Handle buttons
   displayManager.handleButtonLogic();
+
+  memoryManager.updateMemoryUsage(); 
   
   delay(1000);
 

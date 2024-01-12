@@ -47,7 +47,7 @@ class VisualizationPageState extends State<VisualizationPage>
     _loadRooms();
 
     sensorData = SensorData();
-    apiService = APIService();
+    apiService = APIService.instance;
 
     temperatureSensor = sensorData.temperatureSensor;
     luminositySensor = sensorData.luminositySensor;

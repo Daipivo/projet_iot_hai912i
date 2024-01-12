@@ -8,10 +8,20 @@ import 'dart:async';
 import 'package:office_env_tracker/utils/app_theme.dart';
 
 class APIService {
+  static final APIService _instance = APIService._internal();
+
+  APIService._internal();
+
+  static APIService get instance => _instance;
+
   String _urlBase = '127.0.0.1/api';
 
   void setUrlBase(String ipAddress) {
     _urlBase = "http://$ipAddress/api";
+  }
+
+  String getUrlBase() {
+    return _urlBase;
   }
 
   Future<String> fetchLedStatus(String sensorType) async {

@@ -20,7 +20,7 @@ private:
 public:
     DisplayManager(TFT_eSPI &tftDisplay, LedController& ledCtrl, int downPin, int togglePin);
     void init();
-    void updateDisplay(float temperature, float luminosite);
+    void updateDisplay(float temperature, float luminosite, float heapUsage, float memoryFlashUsage);
     void handleButtonPress(int buttonPin);
     void handleButtonLogic();  // Nouvelle méthode
 };

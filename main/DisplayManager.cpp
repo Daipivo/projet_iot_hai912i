@@ -15,25 +15,33 @@ void DisplayManager::init() {
     tft.setTextSize(1.5);
 }
 
-void DisplayManager::updateDisplay(float temperature, float luminosite) {
+void DisplayManager::updateDisplay(float temperature, float luminosite, float heapUsage, float memoryFlashUsage) {
     tft.fillScreen(TFT_BLACK);
     tft.setCursor(0, 0);
 
     // Affichage de l'état de la LED de température
     tft.setTextColor(selectedLed == 2 ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
-    tft.printf("LED Temperature : %s\n", ledController.isTemperatureLedOn() ? "ON" : "OFF");
+    tft.printf("Temperature LED : %s\n", ledController.isTemperatureLedOn() ? "ON" : "OFF");
 
     // Affichage de l'état de la LED de luminosité
     tft.setTextColor(selectedLed == 1 ? TFT_YELLOW : TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, 30);
-    tft.printf("LED Luminosite : %s\n", ledController.isLuminosityLedOn() ? "ON" : "OFF");
+    tft.printf("Luminosity LED : %s\n", ledController.isLuminosityLedOn() ? "ON" : "OFF");
 
     // Affichage des valeurs de température et luminosité
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setCursor(0, 60);
     tft.printf("Temperature : %.2f C\n", temperature);
     tft.setCursor(0, 90);
-    tft.printf("Luminosite : %.2f V", luminosite);
+    tft.printf("Luminosity : %.2f V", luminosite);
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(0, 120);
+    tft.printf("Heap mem.: %.2f%%", heapUsage);
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(0, 150);
+    tft.printf("Flash mem. : %.2f%%", memoryFlashUsage);
 }
 
 void DisplayManager::handleButtonPress(int buttonPin) {

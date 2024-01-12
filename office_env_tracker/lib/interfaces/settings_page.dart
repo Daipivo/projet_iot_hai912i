@@ -30,7 +30,7 @@ class _SettingsPageState extends State<SettingsPage>
   void initState() {
     super.initState();
     sensorData = SensorData();
-    apiService = APIService();
+    apiService = APIService.instance;
     sensorData.addListener(_updateSensorData);
     temperatureSensor = sensorData.temperatureSensor;
     luminositySensor = sensorData.luminositySensor;
