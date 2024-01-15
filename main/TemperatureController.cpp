@@ -2,7 +2,7 @@
 #include "FirebaseManager.h"
 
 const float TemperatureController::R1 = 10000.0; // résistance fixe
-const float TemperatureController::T0 = 25.0 + 273.15; // Température de référence en Kelvin
+const float TemperatureController::T0 = 25.0;
 const float TemperatureController::R0 = 10000.0; // Résistance du thermistor à T0
 const float TemperatureController::B = 3950.0; // Coefficient B
 
@@ -12,12 +12,19 @@ TemperatureController::TemperatureController(int analogPin, AsyncWebServer* serv
 
 float TemperatureController::getTemperature() {
     float Vout = analogRead(_analogPin) * 3.3 / 4095.0;
-    float R2 = R1 * (3.3 - Vout) / Vout;
-    
+    float R2 = (R1 * Vout) / (Vout - 3.3);
+    // float 
+    // float R2 = R1 / (3.3 / Vout - 1.0);
+    // float R2 = ((3.3 - R1) - (R1 * Vout)) / Vout; 
     // Utilisation de la formule de Steinhart-Hart
     float lnR2 = log(R2 / R0);
-    float tempK = 1.0 / ((1.0 / T0) + (1.0 / B) * lnR2);
-    float tempC = tempK - 273.15;
+
+    Serial.print("1 => " + String(Vout));
+    Serial.print("2 => " + String(R2));
+
+
+
+    float tempC = 1.0 / ((1.0 / T0) + (1.0 / B) * lnR2);
     
     return tempC;
 }
