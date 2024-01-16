@@ -7,7 +7,10 @@
 #include "EventManager.h"
 #include <ArduinoJson.h>
 
+// Init class
 class LuminosityController {
+
+// Public methods 
 public:
     LuminosityController(int analogPin, AsyncWebServer* server, EventManager* eventManager);
     
@@ -15,6 +18,7 @@ public:
     void init();
     void handle();
 
+// Private attributes
 private:
     EventManager* _eventManager;
     bool _luminosityControlEnabled = false;

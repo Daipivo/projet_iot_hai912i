@@ -8,8 +8,10 @@
 #include <ArduinoJson.h>
 
 
-
+// Init class
 class TemperatureController {
+
+// Public methods
 public:
 
     TemperatureController(int analogPin, AsyncWebServer* server, EventManager* eventManager);
@@ -18,6 +20,7 @@ public:
     void init();
     void handle();
 
+// Private attributes
 private:
     EventManager* _eventManager;
     bool _temperatureControlEnabled = false;

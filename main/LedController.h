@@ -5,8 +5,10 @@
 #include "IEventObserver.h" 
 #include <ArduinoJson.h>
 
-
+// Init class
 class LedController : public IEventObserver {
+
+// Public methods
 public:
     LedController(int luminosityLedPin, int temperatureLedPin, AsyncWebServer* server);
     void init();  
@@ -23,6 +25,7 @@ public:
     void toggleLuminosityLed();
     void toggleTemperatureLed();
 
+// Private attributes
 private:
     AsyncWebServer* _server;
     int _luminosityLedPin;

@@ -1,15 +1,19 @@
 #include "LuminosityController.h"
 #include "FirebaseManager.h"
 
-
+// Constructor
 LuminosityController::LuminosityController(int analogPin, AsyncWebServer* server, EventManager* eventManager) 
     : _analogPin(analogPin), _server(server), _eventManager(eventManager) {}
 
+// Return current luminosity
 float LuminosityController::getLuminosity() {
-    float Vout = analogRead(_analogPin) * 3.3 / 4095.0; // Convertir la lecture analogique en tension
-    return Vout; // Retourne la tension pour le moment.
+    
+    // Get tension value
+    float Vout = analogRead(_analogPin) * 3.3 / 4095.0; 
+    return Vout; 
 }
 
+// Init server routes
 void LuminosityController::init() {
     
     _server->on("/api/luminosity/control", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
@@ -45,14 +49,13 @@ void LuminosityController::init() {
     
     FirebaseManager::getInstance().sendSensorData(luminosite, "luminosity");
 
-    // Construction de l'objet JSON
     DynamicJsonDocument doc(256);
     doc["luminosity"] = luminosite;
     doc["controlEnabled"] = luminosityControlState;
     doc["threshold"] = luminosityThreshold;
 
     String response;
-    serializeJson(doc, response); // Convertit l'objet JSON en chaîne de caractères
+    serializeJson(doc, response); 
 
     request->send(200, "application/json", response);
 });
@@ -82,6 +85,7 @@ void LuminosityController::init() {
 
 }
 
+// Handle periodic
 void LuminosityController::handle() {
     if(_luminosityControlEnabled) {
         float luminosite = getLuminosity();

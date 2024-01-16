@@ -68,7 +68,7 @@ void setup() {
 
   configTime(0, 0, ntpServer);
 
-  // Getting IP Address
+  // Get IP Address
   IPAddress ip = WiFi.localIP();
 
   // Init Firebase
@@ -82,14 +82,14 @@ void setup() {
   eventManager.saveObserver("luminosite", &ledController);
   eventManager.saveObserver("temperature", &ledController);
 
-  // Initialize the controllers
+  // Initialize controllers
   ledController.init();
   temperatureController.init();
   luminosityController.init();
 
   memoryManager.updateMemoryUsage();
   
-  // Initialize the TFT display
+  // Initialize TFT display
   tft.init();
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);

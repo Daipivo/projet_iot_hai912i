@@ -5,7 +5,10 @@
 #include <WiFiManager.h>
 #include "LedController.h"
 
+// Init class
 class DisplayManager {
+
+// Private attributes
 private:
     TFT_eSPI& tft;
     LedController& ledController;
@@ -17,6 +20,7 @@ private:
     unsigned long lastDebounceTime;
     const unsigned long debounceDelay = 50;
 
+// Public methods
 public:
     DisplayManager(TFT_eSPI &tftDisplay, LedController& ledCtrl, int downPin, int togglePin);
     void init();

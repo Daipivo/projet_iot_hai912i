@@ -5,16 +5,19 @@
 #include <time.h>
 #include <WiFi.h>
 
+// Init class
 class FirebaseManager {
+
+// public methods
 public:
     static FirebaseManager& getInstance();
     void begin();
     bool sendSensorData(float value, String sensor);
     bool updateIpAddress(String roomId, String ipAddress);
-    // Interdisez la copie
     FirebaseManager(FirebaseManager const&) = delete;
     void operator=(FirebaseManager const&) = delete;
 
+// private attributes
 private:
     FirebaseManager();
     FirebaseData fbdo;

@@ -1,21 +1,24 @@
 #include "TemperatureController.h"
 #include "FirebaseManager.h"
 
-const float TemperatureController::R1 = 10000.0; // résistance fixe
+const float TemperatureController::R1 = 10000.0; 
 const float TemperatureController::T0 = 25.0 + 273.15;
-const float TemperatureController::R0 = 10000.0; // Résistance du thermistor à T0
-const float TemperatureController::B = 3950.0; // Coefficient B
+const float TemperatureController::R0 = 10000.0; 
+const float TemperatureController::B = 3950.0; // B Coefficient 
 
+// Constructor
 TemperatureController::TemperatureController(int analogPin, AsyncWebServer* server, EventManager* eventManager) 
     : _analogPin(analogPin), _server(server), _eventManager(eventManager) {}
 
-
+// Return current temperature
 float TemperatureController::getTemperature() {
+
+    // Get tension value
     float Vout = analogRead(_analogPin) * 3.3 / 4095.0;
     
+    // Get thermistance value
     float RT = ((R1 * 3.3) / Vout) - R1;
     
-    // Utilisation de la formule de Steinhart-Hart
     float lnRT = log(RT / R0);
 
     float tempK = 1.0 / ((1.0 / T0) + (1.0 / B) * lnRT);
@@ -25,6 +28,7 @@ float TemperatureController::getTemperature() {
     return tempC;
 }
 
+// Init server routes
 void TemperatureController::init() {
 
     _server->on("/api/temperature/control", HTTP_PATCH, [this](AsyncWebServerRequest* request) {},
@@ -58,14 +62,14 @@ void TemperatureController::init() {
 
 
     FirebaseManager::getInstance().sendSensorData(temperature, "temperature");
-    // Construction de l'objet JSON
+
     DynamicJsonDocument doc(256);
     doc["temperature"] = temperature;
     doc["controlEnabled"] = temperatureControlState;
     doc["threshold"] = temperatureThreshold;
 
     String response;
-    serializeJson(doc, response); // Convertit l'objet JSON en chaîne de caractères
+    serializeJson(doc, response); 
 
     serializeJsonPretty(doc, Serial);
     request->send(200, "application/json", response);
@@ -84,9 +88,7 @@ void TemperatureController::init() {
         } else {
             request->send(400, "text/plain", "Paramètre 'value' manquant");
         }
-});
-
-
+    });
 
     _server->on("/api/temperature", HTTP_GET, [this](AsyncWebServerRequest* request){
         float temperature = this->getTemperature();
@@ -96,6 +98,7 @@ void TemperatureController::init() {
 
 }
 
+// Handle periodic
 void TemperatureController::handle() {
     if(_temperatureControlEnabled) {
         float temperature = getTemperature();

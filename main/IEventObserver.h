@@ -3,7 +3,10 @@
 
 #include <Arduino.h>
 
+// Init class
 class IEventObserver {
+
+// Public methods
 public:
     virtual ~IEventObserver() {}
     virtual void onEvenement(const String& typeEvenement, bool estEnDessousSeuil) = 0;

@@ -6,10 +6,14 @@
 #include <map>
 #include <vector>
 
+// Init class
 class EventManager {
+
+// Private attribute
 private:
     std::map<String, std::vector<IEventObserver*>> observers;
 
+// Public methods
 public:
     void saveObserver(const String& typeEvenement, IEventObserver* observer) {
         observers[typeEvenement].push_back(observer);
