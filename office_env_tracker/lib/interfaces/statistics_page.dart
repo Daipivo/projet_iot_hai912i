@@ -50,16 +50,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
     } catch (e) {}
   }
 
-  void _signInAndFetchData() async {
-    await FirestoreService.instance.signInWithEmail(
-      "test@gmail.com",
-      "test",
-    );
-  }
-
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
-    selectedRoom = rooms[0];
+    if (rooms.isNotEmpty) {
+      selectedRoom = rooms[0];
+      await _handleRefreshData(); // Chargement initial des données de capteurs
+    }
   }
 
   @override

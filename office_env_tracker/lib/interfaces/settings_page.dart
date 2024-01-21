@@ -36,6 +36,7 @@ class _SettingsPageState extends State<SettingsPage>
     luminositySensor = sensorData.luminositySensor;
     selectedSensor = temperatureSensor;
     _updateSensorSelection();
+    loadData();
   }
 
   void _updateSensorData() {
