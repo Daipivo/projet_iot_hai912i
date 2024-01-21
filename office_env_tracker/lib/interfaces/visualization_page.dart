@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
@@ -22,7 +23,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
   bool isDataAvailable = true;
 
-  late Map<String, dynamic> selectedRoom;
+  Map<String, dynamic>? selectedRoom;
 
   String temperature = '';
   String luminosity = '';
@@ -43,8 +44,6 @@ class VisualizationPageState extends State<VisualizationPage>
     super.initState();
 
     firestoreService = FirestoreService.instance;
-    _signInAndFetchData();
-    _loadRooms();
 
     sensorData = SensorData();
     apiService = APIService.instance;
@@ -53,21 +52,50 @@ class VisualizationPageState extends State<VisualizationPage>
     luminositySensor = sensorData.luminositySensor;
 
     sensorData.addListener(_updateSensorData);
+
+    _initializeApp();
   }
 
-  void _signInAndFetchData() async {
-    await FirestoreService.instance.signInWithEmail(
-      "test@gmail.com",
-      "test",
-    );
+  Future<void> _initializeApp() async {
+    bool isAuthenticated = await _signInAndFetchData();
+
+    if (isAuthenticated) {
+      await _loadRooms();
+    } else {
+      // Gérer le cas où l'utilisateur n'est pas authentifié
+      // Par exemple, rediriger vers une page de connexion
+    }
+  }
+
+  Future<bool> _signInAndFetchData() async {
+    try {
+      User? user = await FirestoreService.instance
+          .signInWithEmail("test2@gmail.com", "test2-34");
+      if (user != null) {
+        log("Utilisateur connecté: ${user.email}");
+        return true;
+      }
+    } catch (e) {
+      print("Erreur lors de la tentative de connexion: $e");
+    }
+    return false;
   }
 
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
     selectedRoom = rooms[0];
-    apiService.setUrlBase(selectedRoom['ipAddress']);
 
-    loadData();
+    if (rooms.isNotEmpty) {
+      selectedRoom = rooms[0];
+      apiService.setUrlBase(selectedRoom!['ipAddress']);
+      loadData();
+    } else {
+      print("Aucune salle disponible");
+      setState(() {
+        selectedRoom =
+            null; // Assurez-vous que selectedRoom est null si aucune salle n'est disponible
+      });
+    }
 
     if (mounted) setState(() {});
   }
@@ -151,6 +179,7 @@ class VisualizationPageState extends State<VisualizationPage>
   @override
   void dispose() {
     sensorData.removeListener(_updateSensorData);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -280,12 +309,16 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildHorizontalButtonRow() {
+    if (selectedRoom == null) {
+      return Container(); // Ou un widget approprié pour indiquer l'absence de données
+    }
+
     return HorizontalRoomButtons(
       rooms: rooms,
       onRoomSelected: (Map<String, dynamic> room) {
         _onRoomSelected(room);
       },
-      selectedRoom: selectedRoom,
+      selectedRoom: selectedRoom!,
     );
   }
 
