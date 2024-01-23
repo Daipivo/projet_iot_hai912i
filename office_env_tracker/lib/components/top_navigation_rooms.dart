@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../utils/commons.dart';
+import '../model/room.dart';
 
 class HorizontalRoomButtons extends StatelessWidget {
-  final List<Map<String, dynamic>> rooms;
-  final Function(Map<String, dynamic> room) onRoomSelected;
-  final Map<String, dynamic> selectedRoom;
+  final List<Room> rooms;
+  final Function(Room room) onRoomSelected;
+  final Room? selectedRoom;
 
   const HorizontalRoomButtons({
     Key? key,
@@ -21,14 +22,16 @@ class HorizontalRoomButtons extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: rooms.map<Widget>((room) {
+          bool isSelected = room.name ==
+              selectedRoom?.name; // Vérifiez si la salle est sélectionnée
           return Padding(
             padding: const EdgeInsets.only(right: 10.0),
             child: Commons.buildButton(
               context,
-              room['name'],
+              room.name,
               Icons.computer,
               () => onRoomSelected(room),
-              selectedRoom['name'],
+              isSelected,
             ),
           );
         }).toList(),

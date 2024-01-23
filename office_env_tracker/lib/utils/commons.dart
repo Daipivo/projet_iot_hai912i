@@ -4,10 +4,8 @@ import '../services/api_service.dart';
 
 class Commons {
   static Widget buildButton(BuildContext context, String buttonName,
-      IconData icon, Function() onSelected, String selectedButton,
+      IconData icon, Function() onSelected, bool isSelected,
       {double? width}) {
-    bool isSelected = selectedButton == buttonName;
-
     Widget buttonContent = Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[

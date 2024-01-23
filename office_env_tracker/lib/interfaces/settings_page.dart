@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import '../utils/app_theme.dart';
 import '../utils/commons.dart';
 import '../model/sensor.dart';
-import '../data/sensor_data.dart';
+import '../managers/sensor_manager.dart';
 import 'dart:developer';
 
 class SettingsPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _SettingsPageState extends State<SettingsPage>
   late Sensor temperatureSensor;
   late Sensor luminositySensor;
   late Sensor selectedSensor;
-  late SensorData sensorData;
+  late SensorManager sensorData;
   late APIService apiService;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(16.0);
@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   void initState() {
     super.initState();
-    sensorData = SensorData();
+    sensorData = SensorManager();
     apiService = APIService.instance;
     sensorData.addListener(_updateSensorData);
     temperatureSensor = sensorData.temperatureSensor;
@@ -110,6 +110,13 @@ class _SettingsPageState extends State<SettingsPage>
   void _setErrorState() {
     valueText = "Non disponible";
     seuilText = "Non disponible";
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Impossible de récupérer les données du capteur"),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -153,7 +160,7 @@ class _SettingsPageState extends State<SettingsPage>
               AppStrings.temperature,
               Icons.thermostat,
               () => _onSensorSelected(temperatureSensor),
-              selectedSensor.type,
+              selectedSensor.type == AppStrings.temperature,
               width: MediaQuery.of(context).size.width / 2.25,
             ),
             const SizedBox(width: 20.0),
@@ -162,7 +169,7 @@ class _SettingsPageState extends State<SettingsPage>
               AppStrings.luminosity,
               Icons.lightbulb_outline,
               () => _onSensorSelected(luminositySensor),
-              selectedSensor.type,
+              selectedSensor.type == AppStrings.luminosity,
               width: MediaQuery.of(context).size.width / 2.25,
             ),
           ],

@@ -4,11 +4,13 @@ import '../utils/app_theme.dart';
 import '../utils/commons.dart';
 import '../model/sensor.dart';
 import '../services/api_service.dart';
-import '../data/sensor_data.dart';
+import '../managers/sensor_manager.dart';
 import '../services/firestore_service.dart';
 import '../components/top_navigation_rooms.dart';
 import 'dart:developer';
 import '../services/api_service.dart';
+import '../managers/room_manager.dart';
+import '../model/room.dart';
 
 class VisualizationPage extends StatefulWidget {
   @override
@@ -23,8 +25,6 @@ class VisualizationPageState extends State<VisualizationPage>
 
   bool isDataAvailable = true;
 
-  Map<String, dynamic>? selectedRoom;
-
   String temperature = '';
   String luminosity = '';
 
@@ -37,7 +37,8 @@ class VisualizationPageState extends State<VisualizationPage>
   late APIService apiService;
 
   final EdgeInsets elementPadding = const EdgeInsets.all(8.0);
-  late final SensorData sensorData; // Utilisation d'une instance unique
+  late final SensorManager sensorData;
+  late final SelectedRoomManager selectedRoomManager;
 
   @override
   void initState() {
@@ -45,13 +46,17 @@ class VisualizationPageState extends State<VisualizationPage>
 
     firestoreService = FirestoreService.instance;
 
-    sensorData = SensorData();
+    sensorData = SensorManager();
+    selectedRoomManager = SelectedRoomManager();
     apiService = APIService.instance;
 
     temperatureSensor = sensorData.temperatureSensor;
     luminositySensor = sensorData.luminositySensor;
 
     sensorData.addListener(_updateSensorData);
+    selectedRoomManager.addListener(_onSelectedRoomChanged);
+
+    _onSelectedRoomChanged();
 
     _initializeApp();
   }
@@ -61,10 +66,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
     if (isAuthenticated) {
       await _loadRooms();
-    } else {
-      // Gérer le cas où l'utilisateur n'est pas authentifié
-      // Par exemple, rediriger vers une page de connexion
-    }
+    } else {}
   }
 
   Future<bool> _signInAndFetchData() async {
@@ -83,21 +85,16 @@ class VisualizationPageState extends State<VisualizationPage>
 
   Future<void> _loadRooms() async {
     rooms = await firestoreService.getRooms();
-    selectedRoom = rooms[0];
 
     if (rooms.isNotEmpty) {
-      selectedRoom = rooms[0];
-      apiService.setUrlBase(selectedRoom!['ipAddress']);
-      loadData();
+      Room initialRoom = Room.fromJson(rooms[0]);
+      selectedRoomManager.selectedRoom =
+          initialRoom; // Utiliser SelectedRoomManager
+      // Pas besoin de appeler loadData ici, car _onSelectedRoomChanged le fera
     } else {
       print("Aucune salle disponible");
-      setState(() {
-        selectedRoom =
-            null; // Assurez-vous que selectedRoom est null si aucune salle n'est disponible
-      });
+      selectedRoomManager.selectedRoom = null;
     }
-
-    if (mounted) setState(() {});
   }
 
   void _updateSensorData() {
@@ -146,6 +143,21 @@ class VisualizationPageState extends State<VisualizationPage>
       isLuminosityLedOn = false;
       isDataAvailable = false;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Impossible de récupérer les données"),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _onSelectedRoomChanged() {
+    var room = selectedRoomManager.selectedRoom;
+    if (room != null) {
+      apiService.setUrlBase(room.ipAddress);
+      loadData();
+    } else {}
   }
 
   Future<void> _fetchAndUpdateSensorData() async {
@@ -185,6 +197,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    selectedRoomManager.removeListener(_onSelectedRoomChanged);
     super.didChangeAppLifecycleState(state); // Ajouter cet appel
     if (state == AppLifecycleState.resumed) {
       loadData();
@@ -309,24 +322,22 @@ class VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildHorizontalButtonRow() {
-    if (selectedRoom == null) {
+    if (rooms.isEmpty) {
       return Container(); // Ou un widget approprié pour indiquer l'absence de données
     }
 
+    // Convertissez les rooms en List<Room> si nécessaire
+    List<Room> roomObjects =
+        rooms.map((roomData) => Room.fromJson(roomData)).toList();
+
     return HorizontalRoomButtons(
-      rooms: rooms,
-      onRoomSelected: (Map<String, dynamic> room) {
-        _onRoomSelected(room);
-      },
-      selectedRoom: selectedRoom!,
+      rooms: roomObjects,
+      onRoomSelected: _onRoomSelected,
+      selectedRoom: selectedRoomManager.selectedRoom, // La salle sélectionnée
     );
   }
 
-  void _onRoomSelected(Map<String, dynamic> room) {
-    setState(() {
-      selectedRoom = room;
-      apiService.setUrlBase(room['ipAddress']);
-      loadData();
-    });
+  void _onRoomSelected(Room room) {
+    selectedRoomManager.selectedRoom = room;
   }
 }

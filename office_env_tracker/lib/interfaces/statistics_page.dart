@@ -8,6 +8,9 @@ import 'dart:math' hide log;
 import '../services/api_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/api_service.dart';
+import '../managers/room_manager.dart';
+import '../model/room.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class StatisticsPage extends StatefulWidget {
   @override
@@ -16,59 +19,51 @@ class StatisticsPage extends StatefulWidget {
 
 class _StatisticsPageState extends State<StatisticsPage> {
   late FirestoreService firestoreService;
-  List<Map<String, dynamic>> rooms = [];
-  List<Map<String, dynamic>> temperatureData = [];
-  List<Map<String, dynamic>> luminosityData = [];
 
-  late APIService apiService;
+  String selectedDataType = 'Température';
+  List<Map<String, dynamic>> sensorDataList = [];
 
-  Map<String, dynamic> selectedRoom = {};
-
-  String selectedDataType = 'Température'; // Température, Luminosité, Tous
-  final List<String> dataTypes = ['Température', 'Luminosité'];
+  late final SelectedRoomManager selectedRoomManager;
 
   @override
   void initState() {
     super.initState();
-
     firestoreService = FirestoreService.instance;
-    _loadRooms();
+    selectedRoomManager = SelectedRoomManager();
+    _handleRefreshData();
   }
 
   Future<void> _handleRefreshData() async {
-    try {
-      if (rooms.isNotEmpty) {
-        if (selectedDataType == "Température") {
-          temperatureData = await firestoreService.getSensorDataByRoomId(
-              selectedDataType, selectedRoom['id']);
-        } else {
-          luminosityData = await firestoreService.getSensorDataByRoomId(
-              selectedDataType, selectedRoom['id']);
-        }
-        setState(() {}); // Mettez à jour l'état pour rafraîchir le graphique
+    Room? selectedRoom = selectedRoomManager.selectedRoom;
+    if (selectedRoom != null) {
+      try {
+        sensorDataList = await firestoreService.getSensorDataByRoomId(
+            selectedDataType, selectedRoom.id);
+        setState(() {});
+      } catch (e) {
+        log("Erreur lors du chargement des données : $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Impossible de récupérer les données statistiques"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
-    } catch (e) {}
-  }
-
-  Future<void> _loadRooms() async {
-    rooms = await firestoreService.getRooms();
-    if (rooms.isNotEmpty) {
-      selectedRoom = rooms[0];
-      await _handleRefreshData(); // Chargement initial des données de capteurs
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    List<FlSpot> spots = selectedDataType == 'Température'
-        ? generateSpots(temperatureData)
-        : generateSpots(luminosityData);
+    List<FlSpot> spots = generateSpots();
+    String roomName =
+        selectedRoomManager.selectedRoom?.name ?? "Aucun bureau sélectionné";
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.primaryColor,
         title: const Text(
-          'Visualiser les statistiques environnementales', // Replace with your title
+          'Visualiser les statistiques environnementales',
           style: TextStyle(fontSize: 18),
         ),
       ),
@@ -79,15 +74,35 @@ class _StatisticsPageState extends State<StatisticsPage> {
           children: <Widget>[
             const SizedBox(height: 12.0),
             _buildHorizontalButtonRow(),
-            const SizedBox(height: 46.0),
-            _buildDataTypeSelector(),
-            const SizedBox(height: 46.0),
+            const SizedBox(height: 20.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                "Bureau sélectionné : $roomName",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20.0),
             Container(
               height: 300,
               padding: EdgeInsets.all(16),
               child: spots.isNotEmpty
                   ? buildChart(spots, selectedDataType)
-                  : Center(child: Text('Aucune donnée à afficher')),
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          SvgPicture.asset(
+                            'images/not_found.svg', // Assurez-vous que le chemin est correct
+                            width: 300,
+                          ),
+                          const Text('Aucune donnée à afficher !'),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -96,38 +111,41 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildHorizontalButtonRow() {
-    return HorizontalRoomButtons(
-      rooms: rooms,
-      onRoomSelected: (Map<String, dynamic> room) {
-        _onRoomSelected(room);
-      },
-      selectedRoom: selectedRoom,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Commons.buildButton(
+              context,
+              'Température',
+              Icons.thermostat,
+              () => _onDataTypeSelected('Température'),
+              selectedDataType == 'Température',
+              width: MediaQuery.of(context).size.width / 2.25,
+            ),
+            const SizedBox(width: 20.0),
+            Commons.buildButton(
+              context,
+              'Luminosité',
+              Icons.lightbulb_outline,
+              () => _onDataTypeSelected('Luminosité'),
+              selectedDataType == 'Luminosité',
+              width: MediaQuery.of(context).size.width / 2.25,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildDataTypeSelector() {
-    // Obtenir la largeur de l'écran
-    double screenWidth = MediaQuery.of(context).size.width;
-
-    return ToggleButtons(
-      isSelected: dataTypes.map((type) => selectedDataType == type).toList(),
-      onPressed: (int index) {
-        setState(() {
-          selectedDataType = dataTypes[index];
-          _handleRefreshData();
-        });
-      },
-      children: dataTypes.map((type) {
-        // Calculer la largeur de chaque bouton
-        return Container(
-          width: screenWidth / dataTypes.length -
-              2, // La moitié de la largeur de l'écran pour chaque bouton
-          alignment: Alignment.center,
-          child: Text(type),
-        );
-      }).toList(),
-      // Ajoutez ici des options de personnalisation (couleurs, bordures, etc.)
-    );
+  void _onDataTypeSelected(String dataType) {
+    setState(() {
+      selectedDataType = dataType;
+      _handleRefreshData();
+    });
   }
 
   Widget buildChart(List<FlSpot> spots, String title) {
@@ -206,20 +224,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  void _onRoomSelected(Map<String, dynamic> room) {
-    setState(() {
-      selectedRoom = room;
-      apiService.setUrlBase(room['ipAddress']);
-      _handleRefreshData();
-    });
-  }
-
-  List<FlSpot> generateSpots(List<Map<String, dynamic>> data) {
-    List<FlSpot> spots = [];
-    for (int i = 0; i < data.length; i++) {
-      double yValue = data[i]['value'];
-      spots.add(FlSpot(i.toDouble(), yValue));
-    }
-    return spots;
+  List<FlSpot> generateSpots() {
+    return sensorDataList.asMap().entries.map((entry) {
+      double x = entry.key.toDouble();
+      double y = entry.value['value'];
+      return FlSpot(x, y);
+    }).toList();
   }
 }
