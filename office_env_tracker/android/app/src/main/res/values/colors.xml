@@ -1,0 +1,4 @@
+<resources>
+    <color name="deepPurple">#673AB7</color> <!-- Cette valeur hexadécimale correspond à la couleur Deep Purple de Material Design -->
+    <!-- Ajoutez d'autres couleurs ici si nécessaire -->
+</resources>
