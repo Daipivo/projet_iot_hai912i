@@ -3,13 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer';
 
 class FirestoreService {
-  // Créez une instance privée statique de FirestoreService
   static final FirestoreService _instance = FirestoreService._internal();
 
-  // Rendre le constructeur privé
   FirestoreService._internal();
 
-  // Fournit un moyen d'accéder à l'instance
   static FirestoreService get instance => _instance;
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -70,8 +67,6 @@ class FirestoreService {
   Future<List<Map<String, dynamic>>> getSensorDataByRoomId(
       String sensor, String roomId) async {
     try {
-      // Chemin vers la collection spécifiée par roomId
-
       String typeSensor =
           sensor == "Température" ? "temperature" : "luminosity";
 

@@ -88,9 +88,7 @@ class VisualizationPageState extends State<VisualizationPage>
 
     if (rooms.isNotEmpty) {
       Room initialRoom = Room.fromJson(rooms[0]);
-      selectedRoomManager.selectedRoom =
-          initialRoom; // Utiliser SelectedRoomManager
-      // Pas besoin de appeler loadData ici, car _onSelectedRoomChanged le fera
+      selectedRoomManager.selectedRoom = initialRoom;
     } else {
       print("Aucune salle disponible");
       selectedRoomManager.selectedRoom = null;
@@ -106,8 +104,7 @@ class VisualizationPageState extends State<VisualizationPage>
   void _setSensorData() {
     temperature = "${temperatureSensor.valeur.toStringAsFixed(1)}°C";
     luminosity = "${luminositySensor.valeur.toStringAsFixed(1)} V";
-    isTemperatureLedOn =
-        temperatureSensor.isLedOn; // Utilisez la valeur du capteur
+    isTemperatureLedOn = temperatureSensor.isLedOn;
     isLuminosityLedOn = luminositySensor.isLedOn;
     isDataAvailable = true;
   }
@@ -198,7 +195,7 @@ class VisualizationPageState extends State<VisualizationPage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     selectedRoomManager.removeListener(_onSelectedRoomChanged);
-    super.didChangeAppLifecycleState(state); // Ajouter cet appel
+    super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       loadData();
     }
@@ -231,9 +228,9 @@ class VisualizationPageState extends State<VisualizationPage>
   Widget _buildCardSensor(BuildContext context, Sensor sensor) {
     String data;
     if (sensor.type == AppStrings.temperature) {
-      data = temperature; // Utilisez directement la valeur de l'état
+      data = temperature;
     } else {
-      data = luminosity; // Utilisez directement la valeur de l'état
+      data = luminosity;
     }
     String autoModeText =
         "Mode Automatique : " + (sensor.automatique ? "Activé" : "Désactivé");
@@ -323,17 +320,16 @@ class VisualizationPageState extends State<VisualizationPage>
 
   Widget _buildHorizontalButtonRow() {
     if (rooms.isEmpty) {
-      return Container(); // Ou un widget approprié pour indiquer l'absence de données
+      return Container();
     }
 
-    // Convertissez les rooms en List<Room> si nécessaire
     List<Room> roomObjects =
         rooms.map((roomData) => Room.fromJson(roomData)).toList();
 
     return HorizontalRoomButtons(
       rooms: roomObjects,
       onRoomSelected: _onRoomSelected,
-      selectedRoom: selectedRoomManager.selectedRoom, // La salle sélectionnée
+      selectedRoom: selectedRoomManager.selectedRoom,
     );
   }
 

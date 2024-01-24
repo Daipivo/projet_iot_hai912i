@@ -10,9 +10,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 1; // Index initial pour la page sélectionnée
-
-  // Ajoutez toutes vos pages ici
+  int _selectedIndex = 1;
   final List<Widget> _pages = [
     SettingsPage(),
     VisualizationPage(),

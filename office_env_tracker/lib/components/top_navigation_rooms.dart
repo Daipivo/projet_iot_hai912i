@@ -22,8 +22,7 @@ class HorizontalRoomButtons extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: rooms.map<Widget>((room) {
-          bool isSelected = room.name ==
-              selectedRoom?.name; // Vérifiez si la salle est sélectionnée
+          bool isSelected = room.name == selectedRoom?.name;
           return Padding(
             padding: const EdgeInsets.only(right: 10.0),
             child: Commons.buildButton(

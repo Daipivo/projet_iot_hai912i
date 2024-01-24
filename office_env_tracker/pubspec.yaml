@@ -71,7 +71,7 @@ flutter:
   assets:
       - images/not_found.svg
   #   - images/a_dot_burr.jpeg
-     - assets/logoApp.png
+      - assets/logoApp.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

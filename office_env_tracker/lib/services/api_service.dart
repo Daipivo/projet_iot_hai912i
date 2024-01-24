@@ -58,8 +58,7 @@ class APIService {
       );
       if (response.statusCode == 200) {
         log('LED toggled successfully.');
-        onStateChanged(
-            newValue); // Exécute la fonction de rappel avec le nouvel état
+        onStateChanged(newValue);
       } else {
         log('Échec de la commutation de la LED: ${response.statusCode}');
         throw Exception('Failed to toggle LED');
@@ -80,8 +79,7 @@ class APIService {
           await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         var responseBody = json.decode(response.body);
-        log(responseBody
-            .toString()); // Convertit l'objet Dart en String pour le log
+        log(responseBody.toString());
         return responseBody;
       } else {
         log('Réponse HTTP non réussie: ${response.statusCode}');
@@ -106,7 +104,6 @@ class APIService {
         body: json.encode({'state': newState ? 'on' : 'off'}),
       );
       if (response.statusCode == 200) {
-        // Mettre à jour le statut automatique du capteur si nécessaire
         sensor.automatique = newState;
         return true;
       } else {

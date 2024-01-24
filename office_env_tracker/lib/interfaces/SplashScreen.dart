@@ -9,7 +9,8 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -28,7 +29,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _animation.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => MainPage()));
+        Navigator.of(context)
+            .pushReplacement(MaterialPageRoute(builder: (_) => MainPage()));
       }
     });
 
@@ -41,7 +43,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // La navigation a été déplacée vers le listener de l'animation.
   }
 
   @override

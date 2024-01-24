@@ -128,9 +128,7 @@ class _SettingsPageState extends State<SettingsPage>
           AppStrings.titleSettingsPage,
           style: TextStyle(fontSize: 18),
         ),
-        actions: [
-          // Ajoutez des actions si nécessaire
-        ],
+        actions: [],
       ),
       backgroundColor: AppColors.primaryColor,
       body: RefreshIndicator(
@@ -184,7 +182,6 @@ class _SettingsPageState extends State<SettingsPage>
         ? valueText
         : "${valueText}${sensor.type == AppStrings.temperature ? '°C' : ' V'}";
 
-    // Seuil du capteur
     String seuilDisplay = (seuilText == "Non disponible" ||
             seuilText == "Chargement...")
         ? seuilText
@@ -194,7 +191,7 @@ class _SettingsPageState extends State<SettingsPage>
       color: AppColors.cardColor,
       margin: const EdgeInsets.all(10),
       child: Container(
-        padding: const EdgeInsets.all(16.0), // Appliquer le padding ici
+        padding: const EdgeInsets.all(16.0),
         width: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +200,6 @@ class _SettingsPageState extends State<SettingsPage>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Titre du capteur (Type)
                 Expanded(
                   child: Text(
                     sensor.type,
@@ -213,12 +209,10 @@ class _SettingsPageState extends State<SettingsPage>
                     ),
                   ),
                 ),
-                // Icône du capteur
                 Icon(sensor.icon, size: 32),
               ],
             ),
             const SizedBox(height: 8),
-            // Valeur du capteur
             Text(
               sensorValueDisplay,
               style: const TextStyle(
@@ -239,8 +233,7 @@ class _SettingsPageState extends State<SettingsPage>
                         fontSize: 20,
                       ),
                     ),
-                    const SizedBox(
-                        width: 8), // Espace entre le texte "Seuil" et l'icône
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () =>
                           _showThresholdInfo(context, selectedSensor.type),
@@ -260,24 +253,24 @@ class _SettingsPageState extends State<SettingsPage>
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
             Container(
-              padding: EdgeInsets.zero, // Supprime tout padding interne
+              padding: EdgeInsets.zero,
               child: ListTile(
-                title: const Text(AppStrings.activateLedSeuilTitle,
-                    style: TextStyle(/* vos styles de texte ici */)),
-                subtitle: const Text(AppStrings.activateLedSeuilSubTitle,
-                    style: TextStyle(/* vos styles de texte secondaire ici */)),
+                title: const Text(
+                  AppStrings.activateLedSeuilTitle,
+                ),
+                subtitle: const Text(
+                  AppStrings.activateLedSeuilSubTitle,
+                ),
                 trailing: Transform.scale(
-                  scale: 0.9, // Ajustez la taille du Switch si nécessaire
+                  scale: 0.9,
                   child: Switch(
                     value: sensor.automatique,
                     onChanged: (bool newValue) async {
                       bool success =
                           await apiService.manageControl(sensor, newValue);
                       if (success) {
-                        // Mise à jour de l'état global
                         if (sensor.type == AppStrings.temperature) {
                           sensorData.updateTemperatureSensor(
                               sensor.valeur, sensor.seuil, newValue);
@@ -285,7 +278,6 @@ class _SettingsPageState extends State<SettingsPage>
                           sensorData.updateLuminositySensor(
                               sensor.valeur, sensor.seuil, newValue);
                         }
-                        // Mise à jour de l'état local
                         _updateSensorData();
                       } else {
                         log("Échec de la mise à jour de l'état du capteur.");
@@ -303,19 +295,15 @@ class _SettingsPageState extends State<SettingsPage>
   }
 
   Widget _buildSlider(Sensor sensor) {
-    // Vérifier si le capteur est un capteur de luminosité et ajuster les paramètres en conséquence
     bool isLuminositySensor = sensor.type == AppStrings.luminosity;
     double min = isLuminositySensor ? 0.0 : -10.0;
     double max = isLuminositySensor ? 3.5 : 30.0;
     int divisions = isLuminositySensor ? 35 : 40;
 
-    // S'assurer que la valeur du seuil est dans la plage valide pour le type de capteur
     double sliderValue = sensor.seuil.toDouble();
-    // Si le seuil est en dehors de la plage valide, le définir sur la valeur minimale
     sliderValue =
         (sliderValue >= min && sliderValue <= max) ? sliderValue : min;
 
-    // Construire le label pour le Slider
     String valueLabel = isLuminositySensor
         ? "${sliderValue.toStringAsFixed(2)}V"
         : "${sliderValue.round()}°C";

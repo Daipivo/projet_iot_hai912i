@@ -96,7 +96,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           SvgPicture.asset(
-                            'images/not_found.svg', // Assurez-vous que le chemin est correct
+                            'images/not_found.svg',
                             width: 300,
                           ),
                           const Text('Aucune donnée à afficher !'),
@@ -156,8 +156,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
       maxY =
           min(spots.map((spot) => spot.y).reduce(max).ceil().toDouble(), 40.0);
     } else {
-      minY = 0.0; // Limite inférieure fixe pour la luminosité
-      maxY = 3.5; // Limite supérieure fixe pour la luminosité
+      minY = 0.0;
+      maxY = 3.3;
     }
 
     double intervalY = (maxY - minY) / 3.ceil().toDouble();
@@ -176,7 +176,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 30,
-              interval: intervalY, // Augmentez cet intervalle si nécessaire
+              interval: intervalY,
               getTitlesWidget: (double value, TitleMeta meta) {
                 if (value == minY || (value - minY) > intervalY) {
                   return Text(value.toStringAsFixed(1));
@@ -195,9 +195,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 30,
-              interval: (spots.length / 4)
-                  .round()
-                  .toDouble(), // Calculez l'intervalle
+              interval: (spots.length / 4).round().toDouble(),
               getTitlesWidget: (double value, TitleMeta meta) {
                 return Text(value.toInt().toString());
               },

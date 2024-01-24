@@ -31,7 +31,6 @@ class Commons {
         backgroundColor: isSelected
             ? AppColors.buttonSelectedColor
             : AppColors.buttonUnselectedColor,
-        // Ajoutez d'autres propriétés de style si nécessaire
       ),
       child: buttonContent,
     );
